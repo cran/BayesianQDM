@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Two Continuous Endpoints</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Two Continuous Endpoints</h1>
+
+
+
+<div id="motivating-scenario" class="section level2">
+<h2>Motivating Scenario</h2>
+<p>We extend the single-endpoint RA trial to a bivariate design with two
+co-primary continuous endpoints:</p>
+<ul>
+<li>Endpoint 1: change from baseline in DAS28 score</li>
+<li>Endpoint 2: change from baseline in HAQ-DI (Health Assessment
+Questionnaire – Disability Index)</li>
+</ul>
+<p>The trial enrolls <span class="math inline">\(n_t = n_c = 20\)</span>
+patients per group (treatment vs. placebo) in a 1:1 randomised
+controlled design.</p>
+<p>Clinically meaningful thresholds (posterior probability):</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="center">Endpoint 1</th>
+<th align="center">Endpoint 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\theta_{\mathrm{TV},1}\)</span></td>
+<td align="center">1.5</td>
+<td align="center">1.0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\theta_{\mathrm{MAV},1}\)</span></td>
+<td align="center">0.5</td>
+<td align="center">0.3</td>
+</tr>
+</tbody>
+</table>
+<p>Null hypothesis thresholds (predictive probability): <span class="math inline">\(\theta_{\mathrm{NULL},1} = 0.5\)</span>, <span class="math inline">\(\theta_{\mathrm{NULL},2} = 0.3\)</span>.</p>
+<p>Decision thresholds: <span class="math inline">\(\gamma_1 =
+0.80\)</span> (Go), <span class="math inline">\(\gamma_2 = 0.20\)</span>
+(NoGo).</p>
+<p>Observed data (used in Sections 2–4):</p>
+<ul>
+<li>Treatment: <span class="math inline">\(\bar{\mathbf{y}}_t = (3.5,
+2.1)^\top\)</span>, <span class="math inline">\(S_t =
+\begin{pmatrix}18.0 &amp; 3.6\\3.6 &amp; 9.0\end{pmatrix}\)</span></li>
+<li>Control: <span class="math inline">\(\bar{\mathbf{y}}_c = (1.8,
+1.0)^\top\)</span>, <span class="math inline">\(S_c =
+\begin{pmatrix}16.0 &amp; 2.8\\2.8 &amp; 8.5\end{pmatrix}\)</span></li>
+</ul>
+<p>where <span class="math inline">\(S_j =
+\sum_{i=1}^{n_j}(\mathbf{y}_{ij} - \bar{\mathbf{y}}_j)
+(\mathbf{y}_{ij} - \bar{\mathbf{y}}_j)^\top\)</span> (<span class="math inline">\(j = t, c\)</span>) is the sum-of-squares
+matrix.</p>
+<hr />
+</div>
+<div id="bayesian-model-normal-inverse-wishart-conjugate" class="section level2">
+<h2>1. Bayesian Model: Normal-Inverse-Wishart Conjugate</h2>
+<div id="prior-distribution" class="section level3">
+<h3>1.1 Prior Distribution</h3>
+<p>For group <span class="math inline">\(j\)</span> (<span class="math inline">\(j = t\)</span>: treatment, <span class="math inline">\(j = c\)</span>: control), we model the bivariate
+outcomes for patient <span class="math inline">\(i\)</span> (<span class="math inline">\(i = 1, \ldots, n_j\)</span>) as</p>
+<p><span class="math display">\[\mathbf{y}_{ij} \mid \boldsymbol{\mu}_j,
+\Sigma_j \;\overset{iid}{\sim}\;
+  \mathcal{N}_2(\boldsymbol{\mu}_j,\, \Sigma_j).\]</span></p>
+<p>The conjugate prior is the Normal-Inverse-Wishart (NIW)
+distribution:</p>
+<p><span class="math display">\[(\boldsymbol{\mu}_j, \Sigma_j) \;\sim\;
+  \mathrm{NIW}(\boldsymbol{\mu}_{0j},\, \kappa_{0j},\, \nu_{0j},\,
+  \Lambda_{0j}),\]</span></p>
+<p>where <span class="math inline">\(\boldsymbol{\mu}_{0j} \in
+\mathbb{R}^2\)</span> is the prior mean (argument <code>mu0_t</code> or
+<code>mu0_c</code>), <span class="math inline">\(\kappa_{0j} &gt;
+0\)</span> is the prior concentration (<code>kappa0_t</code> or
+<code>kappa0_c</code>), <span class="math inline">\(\nu_{0j} &gt;
+3\)</span> is the prior degrees of freedom (<code>nu0_t</code> or
+<code>nu0_c</code>), and <span class="math inline">\(\Lambda_{0j}\)</span> is a <span class="math inline">\(2 \times 2\)</span> positive-definite prior scale
+matrix (<code>Lambda0_t</code> or <code>Lambda0_c</code>).</p>
+<p>The vague (Jeffreys) prior is obtained by letting <span class="math inline">\(\kappa_{0j} \to 0\)</span> and <span class="math inline">\(\nu_{0j} \to 0\)</span>
+(<code>prior = &#39;vague&#39;</code>).</p>
+</div>
+<div id="posterior-distribution" class="section level3">
+<h3>1.2 Posterior Distribution</h3>
+<p>Given <span class="math inline">\(n_j\)</span> observations with
+sample mean <span class="math inline">\(\bar{\mathbf{y}}_j\)</span>
+(<code>ybar_t</code> or <code>ybar_c</code>) and sum-of-squares matrix
+<span class="math inline">\(S_j\)</span> (<code>S_t</code> or
+<code>S_c</code>), the NIW posterior has updated parameters:</p>
+<p><span class="math display">\[\kappa_{nj} = \kappa_{0j} + n_j, \qquad
+  \nu_{nj} = \nu_{0j} + n_j,\]</span></p>
+<p><span class="math display">\[\boldsymbol{\mu}_{nj} =
+  \frac{\kappa_{0j}\,\boldsymbol{\mu}_{0j} + n_j\,\bar{\mathbf{y}}_j}
+       {\kappa_{nj}},\]</span></p>
+<p><span class="math display">\[\Lambda_{nj} = \Lambda_{0j} + S_j +
+  \frac{\kappa_{0j}\,n_j}{\kappa_{nj}}
+  (\bar{\mathbf{y}}_j - \boldsymbol{\mu}_{0j})
+  (\bar{\mathbf{y}}_j - \boldsymbol{\mu}_{0j})^\top.\]</span></p>
+<p>The marginal posterior of the group mean <span class="math inline">\(\boldsymbol{\mu}_j\)</span> is a bivariate
+non-standardised <span class="math inline">\(t\)</span>-distribution:</p>
+<p><span class="math display">\[\boldsymbol{\mu}_j \mid \mathbf{Y}_j
+\;\sim\;
+  t_{\nu_{nj} - 1}\!\!\left(\boldsymbol{\mu}_{nj},\;
+  \frac{\Lambda_{nj}}{\kappa_{nj}(\nu_{nj} - 1)}\right).\]</span></p>
+<p>Under the vague prior, this simplifies to</p>
+<p><span class="math display">\[\boldsymbol{\mu}_j \mid \mathbf{Y}_j
+\;\sim\;
+  t_{n_j - 2}\!\!\left(\bar{\mathbf{y}}_j,\;
+  \frac{S_j}{n_j(n_j - 2)}\right).\]</span></p>
+</div>
+<div id="posterior-of-the-bivariate-treatment-effect" class="section level3">
+<h3>1.3 Posterior of the Bivariate Treatment Effect</h3>
+<p>The bivariate treatment effect is <span class="math inline">\(\boldsymbol{\theta} =
+\boldsymbol{\mu}_t - \boldsymbol{\mu}_c\)</span>. Since the two groups
+are independent, the posterior of <span class="math inline">\(\boldsymbol{\theta}\)</span> is the distribution
+of the difference of two independent bivariate <span class="math inline">\(t\)</span>-vectors:</p>
+<p><span class="math display">\[T_j \;\sim\;
+t_{\nu_{nj}-1}(\boldsymbol{\mu}_{nj},\, V_j),\]</span></p>
+<p>where the posterior scale matrix is <span class="math inline">\(V_j =
+\Lambda_{nj} / [\kappa_{nj}(\nu_{nj}-1)]\)</span>.</p>
+<p>The posterior probability that <span class="math inline">\(\boldsymbol{\theta}\)</span> falls in a
+rectangular region <span class="math inline">\(R\)</span> defined by
+thresholds on each component is</p>
+<p><span class="math display">\[P(\boldsymbol{\theta} \in R \mid
+\mathbf{Y}) =
+  P(T_t - T_c \in R),\]</span></p>
+<p>computed by one of two methods (MC or MM) described in Section 3.</p>
+</div>
+<div id="nine-region-grid-posterior-probability" class="section level3">
+<h3>1.4 Nine-Region Grid (Posterior Probability)</h3>
+<p>The bivariate threshold grid for <span class="math inline">\((\theta_1, \theta_2)\)</span> creates a <span class="math inline">\(3 \times 3\)</span> partition using
+<code>theta_TV1</code>, <code>theta_MAV1</code>, <code>theta_TV2</code>,
+<code>theta_MAV2</code>:</p>
+<table style="border-collapse:collapse; text-align:center; font-size:0.9em;">
+<caption>
+Nine-region grid for two-endpoint posterior probability
+</caption>
+<thead>
+<tr>
+<th colspan="2" rowspan="2" style="border:1px solid #aaa; background:
+      linear-gradient(to top right, white 49.5%, #aaa 49.5%, #aaa 50.5%, white 50.5%);
+      min-width:80px; min-height:60px; padding:4px;">
+</th>
+<th colspan="3" style="border:1px solid #aaa; padding:6px; font-weight:normal;">
+Endpoint 1
+</th>
+</tr>
+<tr>
+<th style="border:1px solid #aaa; padding:6px; font-weight:normal;">
+θ<sub>1</sub> &gt; θ<sub>TV1</sub>
+</th>
+<th style="border:1px solid #aaa; padding:6px; font-weight:normal;">
+θ<sub>TV1</sub> ≥ θ<sub>1</sub> &gt; θ<sub>MAV1</sub>
+</th>
+<th style="border:1px solid #aaa; padding:6px; font-weight:normal;">
+θ<sub>MAV1</sub> ≥ θ<sub>1</sub>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="3" style="border:1px solid #aaa; padding:6px; writing-mode:vertical-rl;
+        transform:rotate(180deg);">
+Endpoint 2
+</td>
+<td style="border:1px solid #aaa; padding:6px; text-align:left;">
+θ<sub>2</sub> &gt; θ<sub>TV2</sub>
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R1
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R4
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R7
+</td>
+</tr>
+<tr>
+<td style="border:1px solid #aaa; padding:6px; text-align:left;">
+θ<sub>TV2</sub> ≥ θ<sub>2</sub> &gt; θ<sub>MAV2</sub>
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R2
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R5
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R8
+</td>
+</tr>
+<tr>
+<td style="border:1px solid #aaa; padding:6px; text-align:left;">
+θ<sub>MAV2</sub> ≥ θ<sub>2</sub>
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R3
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R6
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R9
+</td>
+</tr>
+</tbody>
+</table>
+<p>Region <span class="math inline">\(R_1\)</span> (both endpoints
+exceed <span class="math inline">\(\theta_{\mathrm{TV}}\)</span>) is
+typically designated as Go and <span class="math inline">\(R_9\)</span>
+(both endpoints below <span class="math inline">\(\theta_{\mathrm{MAV}}\)</span>) as NoGo.</p>
+</div>
+<div id="four-region-grid-predictive-probability" class="section level3">
+<h3>1.5 Four-Region Grid (Predictive Probability)</h3>
+<p>For the predictive probability, a <span class="math inline">\(2
+\times 2\)</span> partition is used, defined by <code>theta_NULL1</code>
+and <code>theta_NULL2</code>:</p>
+<table style="border-collapse:collapse; text-align:center; font-size:0.9em;">
+<caption>
+Four-region grid for two-endpoint predictive probability
+</caption>
+<thead>
+<tr>
+<th colspan="2" rowspan="2" style="border:1px solid #aaa; background:
+      linear-gradient(to top right, white 49.5%, #aaa 49.5%, #aaa 50.5%, white 50.5%);
+      min-width:80px; min-height:60px; padding:4px;">
+</th>
+<th colspan="2" style="border:1px solid #aaa; padding:6px; font-weight:normal;">
+Endpoint 1
+</th>
+</tr>
+<tr>
+<th style="border:1px solid #aaa; padding:6px; font-weight:normal;">
+θ<sub>1</sub> &gt; θ<sub>NULL1</sub>
+</th>
+<th style="border:1px solid #aaa; padding:6px; font-weight:normal;">
+θ<sub>1</sub> ≤ θ<sub>NULL1</sub>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2" style="border:1px solid #aaa; padding:6px; writing-mode:vertical-rl;
+        transform:rotate(180deg);">
+Endpoint 2
+</td>
+<td style="border:1px solid #aaa; padding:6px; text-align:left;">
+θ<sub>2</sub> &gt; θ<sub>NULL2</sub>
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R1
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R3
+</td>
+</tr>
+<tr>
+<td style="border:1px solid #aaa; padding:6px; text-align:left;">
+θ<sub>2</sub> ≤ θ<sub>NULL2</sub>
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R2
+</td>
+<td style="border:1px solid #aaa; padding:6px;">
+R4
+</td>
+</tr>
+</tbody>
+</table>
+<p>Region <span class="math inline">\(R_1\)</span> (both endpoints
+exceed <span class="math inline">\(\theta_{\mathrm{NULL}}\)</span>) is
+typically designated as Go and <span class="math inline">\(R_4\)</span>
+(both endpoints at or below <span class="math inline">\(\theta_{\mathrm{NULL}}\)</span>) as NoGo.</p>
+<hr />
+</div>
+</div>
+<div id="posterior-predictive-distribution" class="section level2">
+<h2>2. Posterior Predictive Distribution</h2>
+<p>The predictive distribution of the future sample mean <span class="math inline">\(\bar{\tilde{\mathbf{y}}}_j\)</span> based on <span class="math inline">\(m_j\)</span> future patients (<code>m_t</code> or
+<code>m_c</code>) is again a bivariate <span class="math inline">\(t\)</span>-distribution:</p>
+<p><span class="math display">\[\bar{\tilde{\mathbf{y}}}_j \mid
+\mathbf{Y}_j \;\sim\;
+  t_{\nu_{nj}-1}\!\!\left(\boldsymbol{\mu}_{nj},\;
+  \frac{\Lambda_{nj}}{\kappa_{nj}(\nu_{nj}-1)}
+  \cdot \frac{\kappa_{nj} + 1}{\kappa_{nj}} \cdot \frac{1}{m_j}
+  \right)\]</span></p>
+<p>under the NIW prior. Under the vague prior the scale inflates to
+<span class="math inline">\(S_j(n_j + 1) / [n_j^2(n_j - 2)
+m_j]\)</span>.</p>
+<hr />
+</div>
+<div id="two-computation-methods" class="section level2">
+<h2>3. Two Computation Methods</h2>
+<p>The computation method is specified via the <code>CalcMethod</code>
+argument.</p>
+<div id="monte-carlo-simulation-calcmethod-mc" class="section level3">
+<h3>3.1 Monte Carlo Simulation (<code>CalcMethod = &#39;MC&#39;</code>)</h3>
+<p>For each of <span class="math inline">\(n_\mathrm{MC}\)</span> draws
+(<code>nMC</code>), independent samples are generated:</p>
+<p><span class="math display">\[T_t^{(i)} \;\sim\;
+t_{\nu_{nt}-1}(\boldsymbol{\mu}_{nt}, V_t), \qquad
+  T_c^{(i)} \;\sim\; t_{\nu_{nc}-1}(\boldsymbol{\mu}_{nc},
+V_c),\]</span></p>
+<p>and the probability of region <span class="math inline">\(R_\ell\)</span> is estimated as the empirical
+proportion:</p>
+<p><span class="math display">\[\widehat{P}(R_\ell) =
+  \frac{1}{n_\mathrm{MC}} \sum_{i=1}^{n_\mathrm{MC}}
+  \mathbf{1}\!\left[T_t^{(i)} - T_c^{(i)} \in
+R_\ell\right].\]</span></p>
+<p>When <code>pbayespostpred2cont()</code> is called in vectorised mode
+over <span class="math inline">\(n_\mathrm{sim}\)</span> replicates, all
+<span class="math inline">\(n_\mathrm{MC}\)</span> standard normal and
+chi-squared draws are pre-generated once and reused; only the Cholesky
+factor of the replicate-specific scale matrix is recomputed per
+observation.</p>
+</div>
+<div id="moment-matching-approximation-calcmethod-mm" class="section level3">
+<h3>3.2 Moment-Matching Approximation
+(<code>CalcMethod = &#39;MM&#39;</code>)</h3>
+<p>The difference <span class="math inline">\(\boldsymbol{D} = T_t -
+T_c\)</span> is approximated by a bivariate non-standardised <span class="math inline">\(t\)</span>-distribution (Yamaguchi et al., 2025,
+Theorem 3). Let <span class="math inline">\(V_j\)</span> be the scale
+matrix of <span class="math inline">\(T_j\)</span> (<span class="math inline">\(j = t, c\)</span>), and define</p>
+<p><span class="math display">\[A = \left(\frac{\nu_t}{\nu_t - 2} V_t +
+            \frac{\nu_c}{\nu_c - 2} V_c\right)^{\!-1},\]</span></p>
+<p><span class="math display">\[Q_m = \frac{1}{p(p+2)}\Biggl[
+  \frac{\nu_t^2}{(\nu_t-2)(\nu_t-4)}
+  \left\{(\mathrm{tr}(AV_t))^2 + 2\,\mathrm{tr}(AV_t
+AV_t)\right\}\]</span></p>
+<p><span class="math display">\[\quad
+  + \frac{\nu_c^2}{(\nu_c-2)(\nu_c-4)}
+  \left\{(\mathrm{tr}(AV_c))^2 + 2\,\mathrm{tr}(AV_c
+AV_c)\right\}\]</span></p>
+<p><span class="math display">\[\quad
+  + \frac{2\nu_t\nu_c}{(\nu_t-2)(\nu_c-2)}
+  \left\{\mathrm{tr}(AV_t)\,\mathrm{tr}(AV_c) +
+  2\,\mathrm{tr}(AV_t AV_c)\right\}
+\Biggr]\]</span></p>
+<p>with <span class="math inline">\(p = 2\)</span>. Then <span class="math inline">\(\boldsymbol{D} \approx Z^* \sim
+t_{\nu^*}(\boldsymbol{\mu}^*, \Sigma^*)\)</span>, where</p>
+<p><span class="math display">\[\boldsymbol{\mu}^* = \boldsymbol{\mu}_t
+- \boldsymbol{\mu}_c,\]</span></p>
+<p><span class="math display">\[\nu^* = \frac{2 - 4Q_m}{1 -
+Q_m},\]</span></p>
+<p><span class="math display">\[\Sigma^* = \left(\frac{\nu_t}{\nu_t - 2}
+V_t +
+  \frac{\nu_c}{\nu_c - 2} V_c\right) \frac{\nu^* -
+2}{\nu^*}.\]</span></p>
+<p>The joint probability over each rectangular region is evaluated by a
+single call to <code>mvtnorm::pmvt()</code>, which avoids simulation
+entirely and is exact in the normal limit (<span class="math inline">\(\nu_{nj} \to \infty\)</span>).</p>
+<p>The MM method requires <span class="math inline">\(\nu_{nj} - 1 &gt;
+4\)</span> for both groups (<span class="math inline">\(\nu_j &gt;
+4\)</span> in the notation above); if this condition is not met, the
+function falls back to MC automatically.</p>
+<hr />
+</div>
+</div>
+<div id="study-designs" class="section level2">
+<h2>4. Study Designs</h2>
+<div id="controlled-design" class="section level3">
+<h3>4.1 Controlled Design</h3>
+<p>Both groups are observed in the PoC trial. All NIW posterior
+parameters are updated from the current data.</p>
+<p>Posterior probability – vague prior:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>S_t <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">18.0</span>, <span class="fl">3.6</span>, <span class="fl">3.6</span>, <span class="fl">9.0</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>S_c <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">16.0</span>, <span class="fl">2.8</span>, <span class="fl">2.8</span>, <span class="fl">8.5</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>p_post_vague <span class="ot">&lt;-</span> <span class="fu">pbayespostpred2cont</span>(</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">theta_TV1  =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">theta_TV2  =</span> <span class="fl">1.0</span>, <span class="at">theta_MAV2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="cn">NULL</span>, <span class="at">theta_NULL2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">20</span><span class="dt">L</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>  <span class="at">ybar_t =</span> <span class="fu">c</span>(<span class="fl">3.5</span>, <span class="fl">2.1</span>), <span class="at">S_t =</span> S_t,</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  <span class="at">ybar_c =</span> <span class="fu">c</span>(<span class="fl">1.8</span>, <span class="fl">1.0</span>), <span class="at">S_c =</span> S_c,</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_t =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">5000</span><span class="dt">L</span></span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>)</span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(p_post_vague, <span class="dv">4</span>))</span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt;     R1     R2     R3     R4     R5     R6     R7     R8     R9 </span></span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co">#&gt; 0.5056 0.2198 0.0000 0.1478 0.1264 0.0002 0.0000 0.0002 0.0000</span></span>
+<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>  <span class="st">&quot;g_Go  = P(R1 | data) = %.4f</span><span class="sc">\n</span><span class="st">&quot;</span>, p_post_vague[<span class="st">&quot;R1&quot;</span>]</span>
+<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a>))</span>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt; g_Go  = P(R1 | data) = 0.5056</span></span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a>  <span class="st">&quot;g_NoGo = P(R9 | data) = %.4f</span><span class="sc">\n\n</span><span class="st">&quot;</span>, p_post_vague[<span class="st">&quot;R9&quot;</span>]</span>
+<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a>))</span>
+<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt; g_NoGo = P(R9 | data) = 0.0000</span></span>
+<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a>  <span class="st">&quot;Go  criterion: g_Go  &gt;= gamma1 (0.80)? %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_post_vague[<span class="st">&quot;R1&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.80</span>, <span class="st">&quot;YES&quot;</span>, <span class="st">&quot;NO&quot;</span>)</span>
+<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a>))</span>
+<span id="cb1-36"><a href="#cb1-36" tabindex="-1"></a><span class="co">#&gt; Go  criterion: g_Go  &gt;= gamma1 (0.80)? NO</span></span>
+<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb1-38"><a href="#cb1-38" tabindex="-1"></a>  <span class="st">&quot;NoGo criterion: g_NoGo &gt;= gamma2 (0.20)? %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb1-39"><a href="#cb1-39" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_post_vague[<span class="st">&quot;R9&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;YES&quot;</span>, <span class="st">&quot;NO&quot;</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" tabindex="-1"></a>))</span>
+<span id="cb1-41"><a href="#cb1-41" tabindex="-1"></a><span class="co">#&gt; NoGo criterion: g_NoGo &gt;= gamma2 (0.20)? NO</span></span>
+<span id="cb1-42"><a href="#cb1-42" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Decision: %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb1-43"><a href="#cb1-43" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_post_vague[<span class="st">&quot;R1&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.80</span> <span class="sc">&amp;</span> p_post_vague[<span class="st">&quot;R9&quot;</span>] <span class="sc">&lt;</span>  <span class="fl">0.20</span>, <span class="st">&quot;Go&quot;</span>,</span>
+<span id="cb1-44"><a href="#cb1-44" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_post_vague[<span class="st">&quot;R1&quot;</span>] <span class="sc">&lt;</span>  <span class="fl">0.80</span> <span class="sc">&amp;</span> p_post_vague[<span class="st">&quot;R9&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;NoGo&quot;</span>,</span>
+<span id="cb1-45"><a href="#cb1-45" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_post_vague[<span class="st">&quot;R1&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.80</span> <span class="sc">&amp;</span> p_post_vague[<span class="st">&quot;R9&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;Miss&quot;</span>,</span>
+<span id="cb1-46"><a href="#cb1-46" tabindex="-1"></a>                                                                    <span class="st">&quot;Gray&quot;</span>)))</span>
+<span id="cb1-47"><a href="#cb1-47" tabindex="-1"></a>))</span>
+<span id="cb1-48"><a href="#cb1-48" tabindex="-1"></a><span class="co">#&gt; Decision: Gray</span></span></code></pre></div>
+<p>Posterior probability – NIW informative prior:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>L0 <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">8.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">2.0</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>p_post_niw <span class="ot">&lt;-</span> <span class="fu">pbayespostpred2cont</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;N-Inv-Wishart&#39;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">theta_TV1  =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">theta_TV2  =</span> <span class="fl">1.0</span>, <span class="at">theta_MAV2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="cn">NULL</span>, <span class="at">theta_NULL2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">20</span><span class="dt">L</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">ybar_t =</span> <span class="fu">c</span>(<span class="fl">3.5</span>, <span class="fl">2.1</span>), <span class="at">S_t =</span> S_t,</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">ybar_c =</span> <span class="fu">c</span>(<span class="fl">1.8</span>, <span class="fl">1.0</span>), <span class="at">S_c =</span> S_c,</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="fl">2.0</span>, <span class="at">nu0_t =</span> <span class="fl">5.0</span>, <span class="at">mu0_t =</span> <span class="fu">c</span>(<span class="fl">2.0</span>, <span class="fl">1.0</span>), <span class="at">Lambda0_t =</span> L0,</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="fl">2.0</span>, <span class="at">nu0_c =</span> <span class="fl">5.0</span>, <span class="at">mu0_c =</span> <span class="fu">c</span>(<span class="fl">0.0</span>, <span class="fl">0.0</span>), <span class="at">Lambda0_c =</span> L0,</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">5000</span><span class="dt">L</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>)</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(p_post_niw, <span class="dv">4</span>))</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt;     R1     R2     R3     R4     R5     R6     R7     R8     R9 </span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt; 0.5116 0.2228 0.0000 0.1320 0.1324 0.0010 0.0002 0.0000 0.0000</span></span></code></pre></div>
+<p>Posterior predictive probability (future Phase III: <span class="math inline">\(m_t = m_c = 60\)</span>):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>p_pred <span class="ot">&lt;-</span> <span class="fu">pbayespostpred2cont</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;predictive&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">theta_TV1 =</span> <span class="cn">NULL</span>, <span class="at">theta_MAV1 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">theta_TV2 =</span> <span class="cn">NULL</span>, <span class="at">theta_MAV2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="fl">0.5</span>, <span class="at">theta_NULL2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">20</span><span class="dt">L</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">ybar_t =</span> <span class="fu">c</span>(<span class="fl">3.5</span>, <span class="fl">2.1</span>), <span class="at">S_t =</span> S_t,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">ybar_c =</span> <span class="fu">c</span>(<span class="fl">1.8</span>, <span class="fl">1.0</span>), <span class="at">S_c =</span> S_c,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="dv">60</span><span class="dt">L</span>, <span class="at">m_c =</span> <span class="dv">60</span><span class="dt">L</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_t =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">5000</span><span class="dt">L</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>)</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(p_pred, <span class="dv">4</span>))</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; R1 R2 R3 R4 </span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;  1  0  0  0</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  <span class="st">&quot;</span><span class="sc">\n</span><span class="st">Go  region (R1): P = %.4f  &gt;= gamma1 (0.80)? %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>  p_pred[<span class="st">&quot;R1&quot;</span>], <span class="fu">ifelse</span>(p_pred[<span class="st">&quot;R1&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.80</span>, <span class="st">&quot;YES&quot;</span>, <span class="st">&quot;NO&quot;</span>)</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>))</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; Go  region (R1): P = 1.0000  &gt;= gamma1 (0.80)? YES</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>  <span class="st">&quot;NoGo region (R4): P = %.4f  &gt;= gamma2 (0.20)? %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>  p_pred[<span class="st">&quot;R4&quot;</span>], <span class="fu">ifelse</span>(p_pred[<span class="st">&quot;R4&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;YES&quot;</span>, <span class="st">&quot;NO&quot;</span>)</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>))</span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; NoGo region (R4): P = 0.0000  &gt;= gamma2 (0.20)? NO</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Decision: %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_pred[<span class="st">&quot;R1&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.80</span> <span class="sc">&amp;</span> p_pred[<span class="st">&quot;R4&quot;</span>] <span class="sc">&lt;</span>  <span class="fl">0.20</span>, <span class="st">&quot;Go&quot;</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_pred[<span class="st">&quot;R1&quot;</span>] <span class="sc">&lt;</span>  <span class="fl">0.80</span> <span class="sc">&amp;</span> p_pred[<span class="st">&quot;R4&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;NoGo&quot;</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>  <span class="fu">ifelse</span>(p_pred[<span class="st">&quot;R1&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.80</span> <span class="sc">&amp;</span> p_pred[<span class="st">&quot;R4&quot;</span>] <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;Miss&quot;</span>,</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>                                                        <span class="st">&quot;Gray&quot;</span>)))</span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>))</span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span></code></pre></div>
+</div>
+<div id="uncontrolled-design" class="section level3">
+<h3>4.2 Uncontrolled Design</h3>
+<p>No concurrent control group is enrolled. Under the NIW prior, the
+hypothetical control distribution is</p>
+<p><span class="math display">\[\boldsymbol{\mu}_c \;\sim\;
+  t_{\nu_{nt}-1}\!\!\left(\boldsymbol{\mu}_{0c},\;
+  r \cdot
+\frac{\Lambda_{nt}}{\kappa_{nt}(\nu_{nt}-1)}\right),\]</span></p>
+<p>where <span class="math inline">\(\boldsymbol{\mu}_{0c}\)</span>
+(<code>mu0_c</code>) is the assumed control mean, <span class="math inline">\(r &gt; 0\)</span> (<code>r</code>) scales the
+covariance relative to the treatment group, and <span class="math inline">\(\Lambda_{nt}\)</span> is the posterior scale
+matrix of the treatment group.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>p_unctrl <span class="ot">&lt;-</span> <span class="fu">pbayespostpred2cont</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;uncontrolled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;N-Inv-Wishart&#39;</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">theta_TV1  =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">theta_TV2  =</span> <span class="fl">1.0</span>, <span class="at">theta_MAV2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="cn">NULL</span>, <span class="at">theta_NULL2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">ybar_t =</span> <span class="fu">c</span>(<span class="fl">3.5</span>, <span class="fl">2.1</span>), <span class="at">S_t =</span> S_t,</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">ybar_c =</span> <span class="cn">NULL</span>,        <span class="at">S_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="fl">2.0</span>, <span class="at">nu0_t =</span> <span class="fl">5.0</span>, <span class="at">mu0_t =</span> <span class="fu">c</span>(<span class="fl">2.0</span>, <span class="fl">1.0</span>), <span class="at">Lambda0_t =</span> L0,</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="fu">c</span>(<span class="fl">0.0</span>, <span class="fl">0.0</span>), <span class="at">Lambda0_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="at">r =</span> <span class="fl">1.0</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">5000</span><span class="dt">L</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>)</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(p_unctrl, <span class="dv">4</span>))</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; R1 R2 R3 R4 R5 R6 R7 R8 R9 </span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt;  1  0  0  0  0  0  0  0  0</span></span></code></pre></div>
+</div>
+<div id="external-design-power-prior" class="section level3">
+<h3>4.3 External Design (Power Prior)</h3>
+<p>External data for group <span class="math inline">\(j\)</span>
+(sample size <span class="math inline">\(n_{e,j}\)</span>, sample mean
+<span class="math inline">\(\bar{\mathbf{y}}_{e,j}\)</span>,
+sum-of-squares matrix <span class="math inline">\(S_{e,j}\)</span>) are
+incorporated via a power prior with weight <span class="math inline">\(\alpha_{0e,j} \in (0,1]\)</span>. Both
+<code>prior = &#39;vague&#39;</code> and <code>prior = &#39;N-Inv-Wishart&#39;</code>
+are supported.</p>
+<div id="vague-prior-prior-vague" class="section level4">
+<h4>Vague prior (<code>prior = &#39;vague&#39;</code>)</h4>
+<p>The posterior parameters after combining the vague power prior with
+the PoC data are given by Corollary 2 of Huang et al. (2025):</p>
+<p><span class="math display">\[\boldsymbol{\mu}_{nj}^* =
+  \frac{\alpha_{0e,j}\,n_{e,j}\,\bar{\mathbf{y}}_{e,j} +
+n_j\,\bar{\mathbf{y}}_j}
+       {\kappa_{nj}^*},\]</span></p>
+<p><span class="math display">\[\kappa_{nj}^* = \alpha_{0e,j}\,n_{e,j} +
+n_j, \qquad
+  \nu_{nj}^* = \alpha_{0e,j}\,n_{e,j} + n_j - 1,\]</span></p>
+<p><span class="math display">\[\Lambda_{nj}^* = \alpha_{0e,j}\,S_{e,j}
++ S_j +
+  \frac{\alpha_{0e,j}\,n_{e,j}\,n_j}{\kappa_{nj}^*}
+  (\bar{\mathbf{y}}_j - \bar{\mathbf{y}}_{e,j})
+  (\bar{\mathbf{y}}_j - \bar{\mathbf{y}}_{e,j})^\top.\]</span></p>
+<p>The marginal posterior of <span class="math inline">\(\boldsymbol{\mu}_j\)</span> is then</p>
+<p><span class="math display">\[\boldsymbol{\mu}_j \mid \mathbf{Y}_j
+\;\sim\;
+  t_{\nu_{nj}^* - 1}\!\!\left(\boldsymbol{\mu}_{nj}^*,\;
+  \frac{\Lambda_{nj}^*}{\kappa_{nj}^*(\nu_{nj}^* -
+1)}\right).\]</span></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>S_t     <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">18.0</span>, <span class="fl">3.6</span>, <span class="fl">3.6</span>, <span class="fl">9.0</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>S_c     <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">16.0</span>, <span class="fl">2.8</span>, <span class="fl">2.8</span>, <span class="fl">8.5</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>Se2_ext <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">15.0</span>, <span class="fl">2.5</span>, <span class="fl">2.5</span>, <span class="fl">7.5</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>p_ext_vague <span class="ot">&lt;-</span> <span class="fu">pbayespostpred2cont</span>(</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;external&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">theta_TV1  =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">theta_TV2  =</span> <span class="fl">1.0</span>, <span class="at">theta_MAV2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="cn">NULL</span>, <span class="at">theta_NULL2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">20</span><span class="dt">L</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">ybar_t =</span> <span class="fu">c</span>(<span class="fl">3.5</span>, <span class="fl">2.1</span>), <span class="at">S_t =</span> S_t,</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">ybar_c =</span> <span class="fu">c</span>(<span class="fl">1.8</span>, <span class="fl">1.0</span>), <span class="at">S_c =</span> S_c,</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_t =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="dv">10</span><span class="dt">L</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="fl">0.5</span>,</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="fu">c</span>(<span class="fl">1.5</span>, <span class="fl">0.8</span>), <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> Se2_ext,</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">5000</span><span class="dt">L</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>)</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(p_ext_vague, <span class="dv">4</span>))</span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt;     R1     R2     R3     R4     R5     R6     R7     R8     R9 </span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; 0.6164 0.1900 0.0002 0.1184 0.0750 0.0000 0.0000 0.0000 0.0000</span></span></code></pre></div>
+</div>
+<div id="n-inv-wishart-prior-prior-n-inv-wishart" class="section level4">
+<h4>N-Inv-Wishart prior (<code>prior = &#39;N-Inv-Wishart&#39;</code>)</h4>
+<p>The power prior first combines the initial NIW prior with the
+discounted external data (Theorem 5 of Huang et al., 2025):</p>
+<p><span class="math display">\[\boldsymbol{\mu}_{e,j} =
+  \frac{\alpha_{0e,j}\,n_{e,j}\,\bar{\mathbf{y}}_{e,j} +
+        \kappa_{0j}\,\boldsymbol{\mu}_{0j}}
+       {\kappa_{e,j}},\]</span></p>
+<p><span class="math display">\[\kappa_{e,j} = \alpha_{0e,j}\,n_{e,j} +
+\kappa_{0j}, \qquad
+  \nu_{e,j} = \alpha_{0e,j}\,n_{e,j} + \nu_{0j},\]</span></p>
+<p><span class="math display">\[\Lambda_{e,j} = \alpha_{0e,j}\,S_{e,j} +
+\Lambda_{0j} +
+  \frac{\kappa_{0j}\,\alpha_{0e,j}\,n_{e,j}}{\kappa_{e,j}}
+  (\boldsymbol{\mu}_{0j} - \bar{\mathbf{y}}_{e,j})
+  (\boldsymbol{\mu}_{0j} - \bar{\mathbf{y}}_{e,j})^\top.\]</span></p>
+<p>This intermediate NIW result is then updated with the current PoC
+data by standard conjugate updating (Theorem 6 of Huang et al.,
+2025):</p>
+<p><span class="math display">\[\boldsymbol{\mu}_{nj}^* =
+  \frac{\kappa_{e,j}\,\boldsymbol{\mu}_{e,j} + n_j\,\bar{\mathbf{y}}_j}
+       {\kappa_{nj}^*},\]</span></p>
+<p><span class="math display">\[\kappa_{nj}^* = \kappa_{e,j} + n_j,
+\qquad
+  \nu_{nj}^* = \nu_{e,j} + n_j,\]</span></p>
+<p><span class="math display">\[\Lambda_{nj}^* = \Lambda_{e,j} + S_j +
+  \frac{\kappa_{e,j}\,n_j}{\kappa_{nj}^*}
+  (\bar{\mathbf{y}}_j - \boldsymbol{\mu}_{e,j})
+  (\bar{\mathbf{y}}_j - \boldsymbol{\mu}_{e,j})^\top.\]</span></p>
+<p>The marginal posterior of <span class="math inline">\(\boldsymbol{\mu}_j\)</span> is then</p>
+<p><span class="math display">\[\boldsymbol{\mu}_j \mid \mathbf{Y}_j
+\;\sim\;
+  t_{\nu_{nj}^* - 1}\!\!\left(\boldsymbol{\mu}_{nj}^*,\;
+  \frac{\Lambda_{nj}^*}{\kappa_{nj}^*(\nu_{nj}^* -
+1)}\right).\]</span></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>S_t     <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">18.0</span>, <span class="fl">3.6</span>, <span class="fl">3.6</span>, <span class="fl">9.0</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>S_c     <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">16.0</span>, <span class="fl">2.8</span>, <span class="fl">2.8</span>, <span class="fl">8.5</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>L0      <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">8.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">2.0</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>Se2_ext <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">15.0</span>, <span class="fl">2.5</span>, <span class="fl">2.5</span>, <span class="fl">7.5</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>p_ext <span class="ot">&lt;-</span> <span class="fu">pbayespostpred2cont</span>(</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;external&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;N-Inv-Wishart&#39;</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">theta_TV1  =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">theta_TV2  =</span> <span class="fl">1.0</span>, <span class="at">theta_MAV2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="cn">NULL</span>, <span class="at">theta_NULL2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">20</span><span class="dt">L</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  <span class="at">ybar_t =</span> <span class="fu">c</span>(<span class="fl">3.5</span>, <span class="fl">2.1</span>), <span class="at">S_t =</span> S_t,</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  <span class="at">ybar_c =</span> <span class="fu">c</span>(<span class="fl">1.8</span>, <span class="fl">1.0</span>), <span class="at">S_c =</span> S_c,</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="fl">2.0</span>, <span class="at">nu0_t =</span> <span class="fl">5.0</span>, <span class="at">mu0_t =</span> <span class="fu">c</span>(<span class="fl">2.0</span>, <span class="fl">1.0</span>), <span class="at">Lambda0_t =</span> L0,</span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="fl">2.0</span>, <span class="at">nu0_c =</span> <span class="fl">5.0</span>, <span class="at">mu0_c =</span> <span class="fu">c</span>(<span class="fl">0.0</span>, <span class="fl">0.0</span>), <span class="at">Lambda0_c =</span> L0,</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="dv">10</span><span class="dt">L</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="fl">0.5</span>,</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="fu">c</span>(<span class="fl">1.5</span>, <span class="fl">0.8</span>), <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> Se2_ext,</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">5000</span><span class="dt">L</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>)</span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(p_ext, <span class="dv">4</span>))</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt;     R1     R2     R3     R4     R5     R6     R7     R8     R9 </span></span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="co">#&gt; 0.5674 0.2008 0.0000 0.1212 0.1100 0.0002 0.0000 0.0004 0.0000</span></span></code></pre></div>
+<hr />
+</div>
+</div>
+</div>
+<div id="operating-characteristics" class="section level2">
+<h2>5. Operating Characteristics</h2>
+<div id="definition" class="section level3">
+<h3>5.1 Definition</h3>
+<p>For given true parameters <span class="math inline">\((\boldsymbol{\mu}_t, \Sigma_t,
+\boldsymbol{\mu}_c, \Sigma_c)\)</span> (<code>mu_t</code>,
+<code>Sigma_t</code>, <code>mu_c</code>, <code>Sigma_c</code>), the
+operating characteristics are estimated by Monte Carlo over <span class="math inline">\(n_\mathrm{sim}\)</span> replicates
+(<code>nsim</code>). Let <span class="math inline">\(\hat{g}_{\mathrm{Go},i} = P(\text{GoRegions} \mid
+\mathbf{Y}^{(i)})\)</span> and <span class="math inline">\(\hat{g}_{\mathrm{NoGo},i} = P(\text{NoGoRegions}
+\mid \mathbf{Y}^{(i)})\)</span> for the <span class="math inline">\(i\)</span>-th simulated dataset. Then:</p>
+<p><span class="math display">\[\widehat{\Pr}(\mathrm{Go}) =
+  \frac{1}{n_\mathrm{sim}} \sum_{i=1}^{n_\mathrm{sim}}
+  \mathbf{1}\!\left[\hat{g}_{\mathrm{Go},i} \ge \gamma_1 \;\text{and}\;
+  \hat{g}_{\mathrm{NoGo},i} &lt; \gamma_2\right],\]</span></p>
+<p><span class="math display">\[\widehat{\Pr}(\mathrm{NoGo}) =
+  \frac{1}{n_\mathrm{sim}} \sum_{i=1}^{n_\mathrm{sim}}
+  \mathbf{1}\!\left[\hat{g}_{\mathrm{NoGo},i} \ge \gamma_2
+\;\text{and}\;
+  \hat{g}_{\mathrm{Go},i} &lt; \gamma_1\right],\]</span></p>
+<p><span class="math display">\[\widehat{\Pr}(\mathrm{Miss}) =
+  \frac{1}{n_\mathrm{sim}} \sum_{i=1}^{n_\mathrm{sim}}
+  \mathbf{1}\!\left[\hat{g}_{\mathrm{Go},i} \ge \gamma_1 \;\text{and}\;
+  \hat{g}_{\mathrm{NoGo},i} \ge \gamma_2\right],\]</span></p>
+<p><span class="math display">\[\widehat{\Pr}(\mathrm{Gray}) = 1 -
+  \widehat{\Pr}(\mathrm{Go}) - \widehat{\Pr}(\mathrm{NoGo}) -
+  \widehat{\Pr}(\mathrm{Miss}).\]</span></p>
+<p>Here <span class="math inline">\(\gamma_1\)</span> and <span class="math inline">\(\gamma_2\)</span> correspond to arguments
+<code>gamma_go</code> and <code>gamma_nogo</code>, respectively. A Miss
+(<span class="math inline">\(\hat{g}_{\mathrm{Go}} \ge \gamma_1\)</span>
+and <span class="math inline">\(\hat{g}_{\mathrm{NoGo}} \ge
+\gamma_2\)</span> simultaneously) indicates an inconsistent threshold
+configuration and triggers an error by default
+(<code>error_if_Miss = TRUE</code>).</p>
+</div>
+<div id="example-controlled-design-posterior-probability" class="section level3">
+<h3>5.2 Example: Controlled Design, Posterior Probability</h3>
+<p>Treatment effect scenarios are defined over a two-dimensional grid of
+<span class="math inline">\((\mu_{t1}, \mu_{t2})\)</span> while fixing
+<span class="math inline">\(\boldsymbol{\mu}_c = (0, 0)^\top\)</span>.
+The full factorial combination of unique <span class="math inline">\(\mu_{t1}\)</span> and <span class="math inline">\(\mu_{t2}\)</span> values triggers the tile plot in
+<code>plot()</code>, with colour intensity encoding <span class="math inline">\(\Pr(\mathrm{Go})\)</span>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>Sigma <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">4.0</span>, <span class="fl">0.8</span>, <span class="fl">0.8</span>, <span class="fl">1.0</span>), <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>mu_t1_seq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fl">0.0</span>, <span class="fl">3.5</span>, <span class="at">by =</span> <span class="fl">0.5</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>mu_t2_seq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fl">0.0</span>, <span class="fl">2.1</span>, <span class="at">by =</span> <span class="fl">0.3</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>n_scen    <span class="ot">&lt;-</span> <span class="fu">length</span>(mu_t1_seq) <span class="sc">*</span> <span class="fu">length</span>(mu_t2_seq)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>oc_ctrl <span class="ot">&lt;-</span> <span class="fu">pbayesdecisionprob2cont</span>(</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">nsim =</span> <span class="dv">100</span><span class="dt">L</span>, <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">GoRegions =</span> <span class="dv">1</span><span class="dt">L</span>, <span class="at">NoGoRegions =</span> <span class="dv">9</span><span class="dt">L</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="at">gamma_go =</span> <span class="fl">0.80</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.20</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  <span class="at">theta_TV1  =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  <span class="at">theta_TV2  =</span> <span class="fl">1.0</span>, <span class="at">theta_MAV2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="cn">NULL</span>, <span class="at">theta_NULL2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  <span class="at">mu_t    =</span> <span class="fu">cbind</span>(<span class="fu">rep</span>(mu_t1_seq, <span class="at">times =</span> <span class="fu">length</span>(mu_t2_seq)),</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>                  <span class="fu">rep</span>(mu_t2_seq, <span class="at">each  =</span> <span class="fu">length</span>(mu_t1_seq))),</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="at">Sigma_t =</span> Sigma,</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  <span class="at">mu_c    =</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> n_scen, <span class="at">ncol =</span> <span class="dv">2</span>),</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  <span class="at">Sigma_c =</span> Sigma,</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_t =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">500</span><span class="dt">L</span>, <span class="at">CalcMethod =</span> <span class="st">&#39;MC&#39;</span>,</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>  <span class="at">error_if_Miss =</span> <span class="cn">TRUE</span>, <span class="at">Gray_inc_Miss =</span> <span class="cn">FALSE</span>, <span class="at">seed =</span> <span class="dv">42</span><span class="dt">L</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>)</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="fu">print</span>(oc_ctrl)</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; Go/NoGo/Gray Decision Probabilities (Two Continuous Endpoints) </span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------------------------------- </span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt;   Probability type : posterior </span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;   Design           : controlled </span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;   Prior            : vague </span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;   Method           : NULL </span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;   Simulations      : nsim = 100 </span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt;   MC draws         : nMC = 500 </span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;   Seed             : 42 </span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt;   Threshold(s)     : TV1 = 1.5, MAV1 = 0.5 </span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt;                      TV2 = 1, MAV2 = 0.3 </span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt;   Go  threshold    : gamma_go = 0.8 </span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt;   NoGo threshold   : gamma_nogo = 0.2 </span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt;   Go  regions      : {1} </span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt;   NoGo regions     : {9} </span></span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#&gt;   Sample size      : n_t = 20, n_c = 20 </span></span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="co">#&gt;   True cov (treat.): Sigma_t = [4, 0.8; 0.8, 1] </span></span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a><span class="co">#&gt;   True cov (cont.) : Sigma_c = [4, 0.8; 0.8, 1] </span></span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a><span class="co">#&gt;   Miss handling    : error_if_Miss = TRUE, Gray_inc_Miss = FALSE </span></span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------------------------------- </span></span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a><span class="co">#&gt;  mu_t1 mu_t2 mu_c1 mu_c2     Go   Gray   NoGo</span></span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a><span class="co">#&gt;    0.0   0.0     0     0 0.0000 0.0800 0.9200</span></span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a><span class="co">#&gt;    0.5   0.0     0     0 0.0000 0.2100 0.7900</span></span>
+<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a><span class="co">#&gt;    1.0   0.0     0     0 0.0000 0.5900 0.4100</span></span>
+<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a><span class="co">#&gt;    1.5   0.0     0     0 0.0000 0.8600 0.1400</span></span>
+<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a><span class="co">#&gt;    2.0   0.0     0     0 0.0000 0.9400 0.0600</span></span>
+<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a><span class="co">#&gt;    2.5   0.0     0     0 0.0000 0.9900 0.0100</span></span>
+<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a><span class="co">#&gt;    3.0   0.0     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a><span class="co">#&gt;    3.5   0.0     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a><span class="co">#&gt;    0.0   0.3     0     0 0.0000 0.2600 0.7400</span></span>
+<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a><span class="co">#&gt;    0.5   0.3     0     0 0.0000 0.4000 0.6000</span></span>
+<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a><span class="co">#&gt;    1.0   0.3     0     0 0.0000 0.6800 0.3200</span></span>
+<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a><span class="co">#&gt;    1.5   0.3     0     0 0.0000 0.8700 0.1300</span></span>
+<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a><span class="co">#&gt;    2.0   0.3     0     0 0.0000 0.9400 0.0600</span></span>
+<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a><span class="co">#&gt;    2.5   0.3     0     0 0.0000 0.9900 0.0100</span></span>
+<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a><span class="co">#&gt;    3.0   0.3     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a><span class="co">#&gt;    3.5   0.3     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a><span class="co">#&gt;    0.0   0.6     0     0 0.0000 0.6200 0.3800</span></span>
+<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a><span class="co">#&gt;    0.5   0.6     0     0 0.0000 0.6600 0.3400</span></span>
+<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a><span class="co">#&gt;    1.0   0.6     0     0 0.0000 0.7900 0.2100</span></span>
+<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a><span class="co">#&gt;    1.5   0.6     0     0 0.0000 0.9300 0.0700</span></span>
+<span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a><span class="co">#&gt;    2.0   0.6     0     0 0.0200 0.9400 0.0400</span></span>
+<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a><span class="co">#&gt;    2.5   0.6     0     0 0.0300 0.9600 0.0100</span></span>
+<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a><span class="co">#&gt;    3.0   0.6     0     0 0.0300 0.9700 0.0000</span></span>
+<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a><span class="co">#&gt;    3.5   0.6     0     0 0.0300 0.9700 0.0000</span></span>
+<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a><span class="co">#&gt;    0.0   0.9     0     0 0.0000 0.8700 0.1300</span></span>
+<span id="cb7-76"><a href="#cb7-76" tabindex="-1"></a><span class="co">#&gt;    0.5   0.9     0     0 0.0000 0.9000 0.1000</span></span>
+<span id="cb7-77"><a href="#cb7-77" tabindex="-1"></a><span class="co">#&gt;    1.0   0.9     0     0 0.0100 0.9200 0.0700</span></span>
+<span id="cb7-78"><a href="#cb7-78" tabindex="-1"></a><span class="co">#&gt;    1.5   0.9     0     0 0.0400 0.9000 0.0600</span></span>
+<span id="cb7-79"><a href="#cb7-79" tabindex="-1"></a><span class="co">#&gt;    2.0   0.9     0     0 0.0400 0.9300 0.0300</span></span>
+<span id="cb7-80"><a href="#cb7-80" tabindex="-1"></a><span class="co">#&gt;    2.5   0.9     0     0 0.0600 0.9400 0.0000</span></span>
+<span id="cb7-81"><a href="#cb7-81" tabindex="-1"></a><span class="co">#&gt;    3.0   0.9     0     0 0.1100 0.8900 0.0000</span></span>
+<span id="cb7-82"><a href="#cb7-82" tabindex="-1"></a><span class="co">#&gt;    3.5   0.9     0     0 0.1400 0.8600 0.0000</span></span>
+<span id="cb7-83"><a href="#cb7-83" tabindex="-1"></a><span class="co">#&gt;    0.0   1.2     0     0 0.0000 0.9500 0.0500</span></span>
+<span id="cb7-84"><a href="#cb7-84" tabindex="-1"></a><span class="co">#&gt;    0.5   1.2     0     0 0.0000 0.9500 0.0500</span></span>
+<span id="cb7-85"><a href="#cb7-85" tabindex="-1"></a><span class="co">#&gt;    1.0   1.2     0     0 0.0100 0.9700 0.0200</span></span>
+<span id="cb7-86"><a href="#cb7-86" tabindex="-1"></a><span class="co">#&gt;    1.5   1.2     0     0 0.0500 0.9300 0.0200</span></span>
+<span id="cb7-87"><a href="#cb7-87" tabindex="-1"></a><span class="co">#&gt;    2.0   1.2     0     0 0.1200 0.8800 0.0000</span></span>
+<span id="cb7-88"><a href="#cb7-88" tabindex="-1"></a><span class="co">#&gt;    2.5   1.2     0     0 0.3000 0.7000 0.0000</span></span>
+<span id="cb7-89"><a href="#cb7-89" tabindex="-1"></a><span class="co">#&gt;    3.0   1.2     0     0 0.4000 0.6000 0.0000</span></span>
+<span id="cb7-90"><a href="#cb7-90" tabindex="-1"></a><span class="co">#&gt;    3.5   1.2     0     0 0.3900 0.6100 0.0000</span></span>
+<span id="cb7-91"><a href="#cb7-91" tabindex="-1"></a><span class="co">#&gt;    0.0   1.5     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-92"><a href="#cb7-92" tabindex="-1"></a><span class="co">#&gt;    0.5   1.5     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-93"><a href="#cb7-93" tabindex="-1"></a><span class="co">#&gt;    1.0   1.5     0     0 0.0300 0.9700 0.0000</span></span>
+<span id="cb7-94"><a href="#cb7-94" tabindex="-1"></a><span class="co">#&gt;    1.5   1.5     0     0 0.0800 0.9200 0.0000</span></span>
+<span id="cb7-95"><a href="#cb7-95" tabindex="-1"></a><span class="co">#&gt;    2.0   1.5     0     0 0.2700 0.7300 0.0000</span></span>
+<span id="cb7-96"><a href="#cb7-96" tabindex="-1"></a><span class="co">#&gt;    2.5   1.5     0     0 0.5900 0.4100 0.0000</span></span>
+<span id="cb7-97"><a href="#cb7-97" tabindex="-1"></a><span class="co">#&gt;    3.0   1.5     0     0 0.7400 0.2600 0.0000</span></span>
+<span id="cb7-98"><a href="#cb7-98" tabindex="-1"></a><span class="co">#&gt;    3.5   1.5     0     0 0.7700 0.2300 0.0000</span></span>
+<span id="cb7-99"><a href="#cb7-99" tabindex="-1"></a><span class="co">#&gt;    0.0   1.8     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-100"><a href="#cb7-100" tabindex="-1"></a><span class="co">#&gt;    0.5   1.8     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-101"><a href="#cb7-101" tabindex="-1"></a><span class="co">#&gt;    1.0   1.8     0     0 0.0300 0.9700 0.0000</span></span>
+<span id="cb7-102"><a href="#cb7-102" tabindex="-1"></a><span class="co">#&gt;    1.5   1.8     0     0 0.1000 0.9000 0.0000</span></span>
+<span id="cb7-103"><a href="#cb7-103" tabindex="-1"></a><span class="co">#&gt;    2.0   1.8     0     0 0.4100 0.5900 0.0000</span></span>
+<span id="cb7-104"><a href="#cb7-104" tabindex="-1"></a><span class="co">#&gt;    2.5   1.8     0     0 0.7600 0.2400 0.0000</span></span>
+<span id="cb7-105"><a href="#cb7-105" tabindex="-1"></a><span class="co">#&gt;    3.0   1.8     0     0 0.8800 0.1200 0.0000</span></span>
+<span id="cb7-106"><a href="#cb7-106" tabindex="-1"></a><span class="co">#&gt;    3.5   1.8     0     0 0.9300 0.0700 0.0000</span></span>
+<span id="cb7-107"><a href="#cb7-107" tabindex="-1"></a><span class="co">#&gt;    0.0   2.1     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-108"><a href="#cb7-108" tabindex="-1"></a><span class="co">#&gt;    0.5   2.1     0     0 0.0000 1.0000 0.0000</span></span>
+<span id="cb7-109"><a href="#cb7-109" tabindex="-1"></a><span class="co">#&gt;    1.0   2.1     0     0 0.0300 0.9700 0.0000</span></span>
+<span id="cb7-110"><a href="#cb7-110" tabindex="-1"></a><span class="co">#&gt;    1.5   2.1     0     0 0.1000 0.9000 0.0000</span></span>
+<span id="cb7-111"><a href="#cb7-111" tabindex="-1"></a><span class="co">#&gt;    2.0   2.1     0     0 0.3600 0.6400 0.0000</span></span>
+<span id="cb7-112"><a href="#cb7-112" tabindex="-1"></a><span class="co">#&gt;    2.5   2.1     0     0 0.8000 0.2000 0.0000</span></span>
+<span id="cb7-113"><a href="#cb7-113" tabindex="-1"></a><span class="co">#&gt;    3.0   2.1     0     0 0.9200 0.0800 0.0000</span></span>
+<span id="cb7-114"><a href="#cb7-114" tabindex="-1"></a><span class="co">#&gt;    3.5   2.1     0     0 0.9700 0.0300 0.0000</span></span>
+<span id="cb7-115"><a href="#cb7-115" tabindex="-1"></a><span class="co">#&gt; ----------------------------------------------------------------</span></span>
+<span id="cb7-116"><a href="#cb7-116" tabindex="-1"></a><span class="fu">plot</span>(oc_ctrl, <span class="at">base_size =</span> <span class="dv">20</span>)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The same function supports <code>design = &#39;uncontrolled&#39;</code> (with
+hypothetical control mean <code>mu0_c</code> and scale factor
+<code>r</code>) and <code>design = &#39;external&#39;</code> (with power prior
+arguments <code>ne_c</code>, <code>bar_ye_c</code>, <code>se_c</code>,
+<code>alpha0e_c</code>). The argument <code>prob = &#39;predictive&#39;</code>
+switches to predictive probability (with future sample sizes
+<code>m_t</code>, <code>m_c</code> and null thresholds
+<code>theta_NULL1</code>, <code>theta_NULL2</code>). The function
+signature and output format are identical across all combinations.</p>
+<hr />
+</div>
+</div>
+<div id="optimal-threshold-search" class="section level2">
+<h2>6. Optimal Threshold Search</h2>
+<div id="objective-and-algorithm" class="section level3">
+<h3>6.1 Objective and Algorithm</h3>
+<p>Because there are two decision thresholds <span class="math inline">\((\gamma_1, \gamma_2)\)</span>, the optimal search
+is performed over a two-dimensional grid <span class="math inline">\(\Gamma_1 \times \Gamma_2\)</span> (arguments
+<code>gamma_go_grid</code> and <code>gamma_nogo_grid</code>). The two
+thresholds are calibrated independently under separate scenarios:</p>
+<ul>
+<li><span class="math inline">\(\gamma_1^*\)</span>: calibrated under
+the Go-calibration scenario (<code>mu_t_go</code>,
+<code>Sigma_t_go</code>, <code>mu_c_go</code>, <code>Sigma_c_go</code>;
+typically the null scenario <span class="math inline">\(\boldsymbol{\mu}_t = \boldsymbol{\mu}_c\)</span>),
+so that <span class="math inline">\(\Pr(\mathrm{Go}) &lt;
+\texttt{target\_go}\)</span>.</li>
+<li><span class="math inline">\(\gamma_2^*\)</span>: calibrated under
+the NoGo-calibration scenario (<code>mu_t_nogo</code>,
+<code>Sigma_t_nogo</code>, <code>mu_c_nogo</code>,
+<code>Sigma_c_nogo</code>; typically the alternative scenario), so that
+<span class="math inline">\(\Pr(\mathrm{NoGo}) &lt;
+\texttt{target\_nogo}\)</span>.</li>
+</ul>
+<p><code>getgamma2cont()</code> uses a three-stage strategy:</p>
+<p>Stage 1 (Simulate and precompute): <span class="math inline">\(n_\mathrm{sim}\)</span> bivariate datasets are
+generated separately from each calibration scenario. For each replicate
+<span class="math inline">\(i\)</span>,
+<code>pbayespostpred2cont()</code> is called once in vectorised mode to
+return the full region probability vector. The marginal Go and NoGo
+probabilities per replicate are:</p>
+<p><span class="math display">\[\hat{g}_{\mathrm{Go},i} = \sum_{\ell \in
+\text{GoRegions}} \hat{p}_{i\ell}, \qquad
+  \hat{g}_{\mathrm{NoGo},i} = \sum_{\ell \in \text{NoGoRegions}}
+\hat{p}_{i\ell}.\]</span></p>
+<p>Stage 2 (Gamma sweep): For each candidate <span class="math inline">\(\gamma_1 \in \Gamma_1\)</span> (under the
+Go-calibration scenario) and each <span class="math inline">\(\gamma_2
+\in \Gamma_2\)</span> (under the NoGo-calibration scenario):</p>
+<p><span class="math display">\[\Pr(\mathrm{Go} \mid \gamma_1) =
+  \frac{1}{n_\mathrm{sim}} \sum_{i=1}^{n_\mathrm{sim}}
+  \mathbf{1}\!\left[\hat{g}_{\mathrm{Go},i} \ge
+\gamma_1\right],\]</span></p>
+<p><span class="math display">\[\Pr(\mathrm{NoGo} \mid \gamma_2) =
+  \frac{1}{n_\mathrm{sim}} \sum_{i=1}^{n_\mathrm{sim}}
+  \mathbf{1}\!\left[\hat{g}_{\mathrm{NoGo},i} \ge
+\gamma_2\right].\]</span></p>
+<p>The results are stored as vectors <code>PrGo_grid</code> and
+<code>PrNoGo_grid</code> indexed by <code>gamma_go_grid</code> and
+<code>gamma_nogo_grid</code>, respectively.</p>
+<p>Stage 3 (Optimal selection): <span class="math inline">\(\gamma_1^*\)</span> is the smallest grid value
+satisfying <span class="math inline">\(\Pr(\mathrm{Go} \mid \gamma_1)
+&lt; \texttt{target\_go}\)</span>; <span class="math inline">\(\gamma_2^*\)</span> is the smallest grid value
+satisfying <span class="math inline">\(\Pr(\mathrm{NoGo} \mid \gamma_2)
+&lt; \texttt{target\_nogo}\)</span>.</p>
+</div>
+<div id="example-controlled-design-posterior-probability-1" class="section level3">
+<h3>6.2 Example: Controlled Design, Posterior Probability</h3>
+<p>Go-calibration scenario: <span class="math inline">\(\boldsymbol{\mu}_t = (0.5, 0.3)^\top\)</span>,
+<span class="math inline">\(\boldsymbol{\mu}_c = (0, 0)^\top\)</span>
+(effect at MAV boundary – above which Go is not yet warranted, so <span class="math inline">\(\Pr(\mathrm{Go}) &lt; \texttt{target\_go}\)</span>
+is required). NoGo-calibration scenario: <span class="math inline">\(\boldsymbol{\mu}_t = (1.0, 0.6)^\top\)</span>,
+<span class="math inline">\(\boldsymbol{\mu}_c = (0, 0)^\top\)</span>
+(effect between MAV and TV – above which NoGo should be unlikely).</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>res_gamma <span class="ot">&lt;-</span> <span class="fu">getgamma2cont</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">nsim =</span> <span class="dv">500</span><span class="dt">L</span>, <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">GoRegions =</span> <span class="dv">1</span><span class="dt">L</span>, <span class="at">NoGoRegions =</span> <span class="dv">9</span><span class="dt">L</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">mu_t_go    =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.3</span>), <span class="at">Sigma_t_go    =</span> Sigma,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">mu_c_go    =</span> <span class="fu">c</span>(<span class="fl">0.0</span>, <span class="fl">0.0</span>), <span class="at">Sigma_c_go    =</span> Sigma,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">mu_t_nogo  =</span> <span class="fu">c</span>(<span class="fl">1.0</span>, <span class="fl">0.6</span>), <span class="at">Sigma_t_nogo  =</span> Sigma,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">mu_c_nogo  =</span> <span class="fu">c</span>(<span class="fl">0.0</span>, <span class="fl">0.0</span>), <span class="at">Sigma_c_nogo  =</span> Sigma,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="at">target_go =</span> <span class="fl">0.05</span>, <span class="at">target_nogo =</span> <span class="fl">0.20</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">20</span><span class="dt">L</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="at">theta_TV1  =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  <span class="at">theta_TV2  =</span> <span class="fl">1.0</span>, <span class="at">theta_MAV2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="at">theta_NULL1 =</span> <span class="cn">NULL</span>, <span class="at">theta_NULL2 =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_t =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>  <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">Lambda0_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>  <span class="at">nMC =</span> <span class="dv">500</span><span class="dt">L</span>, <span class="at">CalcMethod =</span> <span class="st">&#39;MC&#39;</span>,</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  <span class="at">gamma_go_grid   =</span> <span class="fu">seq</span>(<span class="fl">0.05</span>, <span class="fl">0.95</span>, <span class="at">by =</span> <span class="fl">0.05</span>),</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  <span class="at">gamma_nogo_grid =</span> <span class="fu">seq</span>(<span class="fl">0.05</span>, <span class="fl">0.95</span>, <span class="at">by =</span> <span class="fl">0.05</span>),</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">42</span><span class="dt">L</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>)</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="fu">plot</span>(res_gamma, <span class="at">base_size =</span> <span class="dv">20</span>)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The same function supports <code>design = &#39;uncontrolled&#39;</code> (with
+<code>mu0_c</code> and <code>r</code>) and
+<code>design = &#39;external&#39;</code> (with power prior arguments
+<code>ne_c</code>, <code>bar_ye_c</code>, <code>se_c</code>,
+<code>alpha0e_c</code>). Setting <code>prob = &#39;predictive&#39;</code>
+switches to predictive probability calibration (with
+<code>theta_NULL1</code>, <code>theta_NULL2</code>, <code>m_t</code>,
+<code>m_c</code>). The function signature is identical across all
+combinations.</p>
+<hr />
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>7. Summary</h2>
+<p>This vignette covered two continuous endpoint analysis in
+BayesianQDM:</p>
+<ol style="list-style-type: decimal">
+<li>Bayesian model: NIW conjugate posterior with explicit update
+formulae for <span class="math inline">\(\kappa_{nj}\)</span>, <span class="math inline">\(\nu_{nj}\)</span>, <span class="math inline">\(\boldsymbol{\mu}_{nj}\)</span>, and <span class="math inline">\(\Lambda_{nj}\)</span>; bivariate non-standardised
+<span class="math inline">\(t\)</span> marginal posterior.</li>
+<li>Nine-region grid for posterior probability and four-region grid for
+predictive probability; typical choice Go = R1, NoGo = R9 (posterior) or
+R4 (predictive).</li>
+<li>Two computation methods: MC (vectorised pre-generated draws with
+Cholesky reuse) and MM (Mahalanobis-distance fourth-moment matching via
+Yamaguchi et al. (2025), Theorem 3, + <code>mvtnorm::pmvt</code> for
+joint probability; requires <span class="math inline">\(\nu_j &gt;
+4\)</span>).</li>
+<li>Three study designs: controlled, uncontrolled (<span class="math inline">\(\boldsymbol{\mu}_{0c}\)</span> and <span class="math inline">\(r\)</span> fixed), external design (vague power
+prior follows Corollary 2 of Huang et al. (2025); NIW power prior
+follows Theorems 5–6).</li>
+<li>Operating characteristics: Monte Carlo estimation with vectorised
+region probability computation.</li>
+<li>Optimal threshold search: three-stage strategy in
+<code>getgamma2cont()</code> calibrating <span class="math inline">\(\gamma_1^*\)</span> and <span class="math inline">\(\gamma_2^*\)</span> independently under separate
+Go- and NoGo-calibration scenarios, with calibration curves visualised
+via <code>plot()</code> and optimal thresholds marked at the target
+probability levels (<span class="math inline">\(\Pr(\mathrm{Go}) &lt;
+0.05\)</span> under null, <span class="math inline">\(\Pr(\mathrm{NoGo})
+&lt; 0.20\)</span> under alternative).</li>
+</ol>
+<p>See <code>vignette(&quot;two-binary&quot;)</code> for the analogous two binary
+endpoint analysis.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
