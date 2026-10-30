@@ -1,160 +1,124 @@
 ## ----setup, include = FALSE---------------------------------------------------
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment  = "#>",
-  fig.width  = 7,
-  fig.height = 4.5,
-  fig.path = "figures/single-bin-"
-)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
+                      fig.height = 4.5)
 library(BayesianQDM)
 
-## ----ctrl-post----------------------------------------------------------------
-# P(pi_t - pi_c > TV  | data)
-p_tv <- pbayespostpred1bin(
-  prob = 'posterior', design = 'controlled', theta0 = 0.20,
-  n_t = 12, n_c = 12, y_t = 8, y_c = 3,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  m_t = NULL, m_c = NULL, z = NULL,
-  ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-  alpha0e_t = NULL, alpha0e_c = NULL,
-  lower.tail = FALSE
+## ----design-------------------------------------------------------------------
+jeffreys <- prior_beta(0.5, 0.5)
+crit <- criterion_posterior(theta_tv = 0.2, theta_mav = 0.1,
+                            gamma_go = 0.5, gamma_nogo = 0.8)
+des <- design_binary(n_t = 12, n_c = 12, prior_t = jeffreys,
+                     prior_c = jeffreys, criterion = crit)
+dec <- qdm_decide(des, data_t = data_binary(12, 9),
+                  data_c = data_binary(12, 3))
+dec
+
+## ----pbetadiff----------------------------------------------------------------
+post_t <- dec$posterior_t
+post_c <- dec$posterior_c
+pbetadiff(0.2, a_t = post_t[["a"]], b_t = post_t[["b"]],
+          a_c = post_c[["a"]], b_c = post_c[["b"]], lower.tail = FALSE)
+pbetadiff(0.1, a_t = post_t[["a"]], b_t = post_t[["b"]],
+          a_c = post_c[["a"]], b_c = post_c[["b"]])
+
+## ----external-----------------------------------------------------------------
+des_ext <- design_binary(
+  n_t = 12, n_c = 12, prior_t = jeffreys, prior_c = jeffreys,
+  criterion = crit,
+  external_c = borrow(data_binary(n = 20, y = 5), a0 = 0.5)
 )
+dec_ext <- qdm_decide(des_ext, data_t = data_binary(12, 9),
+                      data_c = data_binary(12, 3))
+dec_ext$posterior_c
 
-# P(pi_t - pi_c > MAV | data)
-p_mav <- pbayespostpred1bin(
-  prob = 'posterior', design = 'controlled', theta0 = 0.05,
-  n_t = 12, n_c = 12, y_t = 8, y_c = 3,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  m_t = NULL, m_c = NULL, z = NULL,
-  ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-  alpha0e_t = NULL, alpha0e_c = NULL,
-  lower.tail = FALSE
+## ----external-only------------------------------------------------------------
+des_ext0 <- design_binary(
+  n_t = 12, n_c = 0, prior_t = jeffreys, prior_c = jeffreys,
+  criterion = crit,
+  external_c = borrow(data_binary(n = 40, y = 10), a0 = 1)
 )
+qdm_decide(des_ext0, data_t = data_binary(12, 9))
 
-cat(sprintf("P(theta > TV  | data) = %.4f  -> Go  criterion (>= %.2f): %s\n",
-            p_tv,  0.80, ifelse(p_tv  >= 0.80, "YES", "NO")))
-cat(sprintf("P(theta <= MAV | data) = %.4f  -> NoGo criterion (>= %.2f): %s\n",
-            1 - p_mav, 0.20, ifelse((1 - p_mav) >= 0.20, "YES", "NO")))
-cat(sprintf("Decision: %s\n",
-            ifelse(p_tv >= 0.80 & (1 - p_mav) < 0.20, "Go",
-                   ifelse(p_tv < 0.80 & (1 - p_mav) >= 0.20, "NoGo",
-                          ifelse(p_tv >= 0.80 & (1 - p_mav) >= 0.20, "Miss", "Gray")))))
-
-## ----ctrl-pred----------------------------------------------------------------
-p_pred <- pbayespostpred1bin(
-  prob = 'predictive', design = 'controlled', theta0 = 0.10,
-  n_t = 12, n_c = 12, y_t = 8, y_c = 3,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  m_t = 40, m_c = 40, z = NULL,
-  ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-  alpha0e_t = NULL, alpha0e_c = NULL,
-  lower.tail = FALSE
+## ----hypothetical-------------------------------------------------------------
+des_hyp <- design_binary(
+  n_t = 12, n_c = 0, prior_t = jeffreys, prior_c = jeffreys,
+  criterion = crit,
+  hypothetical_c = hypothetical(data = data_binary(n = 12, y = 3))
 )
-cat(sprintf("Predictive probability (m_t = m_c = 40) = %.4f\n", p_pred))
+qdm_decide(des_hyp, data_t = data_binary(12, 9))
 
-## ----ctrl-vector--------------------------------------------------------------
-grid <- expand.grid(y_t = 0:12, y_c = 0:12)
-p_all <- pbayespostpred1bin(
-  prob = 'posterior', design = 'controlled', theta0 = 0.20,
-  n_t = 12, n_c = 12, y_t = grid$y_t, y_c = grid$y_c,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  m_t = NULL, m_c = NULL, z = NULL,
-  ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-  alpha0e_t = NULL, alpha0e_c = NULL,
-  lower.tail = FALSE
+## ----fixed--------------------------------------------------------------------
+crit_fix <- criterion_posterior(theta_tv = 0.2, theta_mav = 0.05,
+                                gamma_go = 0.8, gamma_nogo = 0.8)
+des_fix <- design_binary(n_t = 20, n_c = 0, prior_t = prior_beta(1, 1),
+                         criterion = crit_fix, fixed_c = 0.2)
+dec_fix <- qdm_decide(des_fix, data_t = data_binary(20, 11))
+dec_fix
+pbeta(0.2 + 0.2, 1 + 11, 1 + 20 - 11, lower.tail = FALSE)
+
+## ----predictive---------------------------------------------------------------
+des_pred <- design_binary(
+  n_t = 12, n_c = 12, prior_t = jeffreys, prior_c = jeffreys,
+  criterion = criterion_predictive(theta_null = 0, m_t = 40,
+                                   gamma_go = 0.9, gamma_nogo = 0.7)
 )
-# Show results for a selection of outcome pairs
-sel <- data.frame(y_t = grid$y_t, y_c = grid$y_c, P_gt_TV = round(p_all, 4))
-head(sel[order(-sel$P_gt_TV), ], 10)
+dec_pred <- qdm_decide(des_pred, data_t = data_binary(12, 9),
+                       data_c = data_binary(12, 3))
+dec_pred
+post_t <- dec_pred$posterior_t
+post_c <- dec_pred$posterior_c
+pbetabinomdiff(0, m_t = 40, a_t = post_t[["a"]], b_t = post_t[["b"]],
+               m_c = 40, a_c = post_c[["a"]], b_c = post_c[["b"]],
+               lower.tail = FALSE)
 
-## ----unctrl-post--------------------------------------------------------------
-# Hypothetical control: z = 2 responders out of n_c = 12
-p_unctrl <- pbayespostpred1bin(
-  prob = 'posterior', design = 'uncontrolled', theta0 = 0.20,
-  n_t = 12, n_c = 12, y_t = 8, y_c = NULL,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  m_t = NULL, m_c = NULL, z = 2L,
-  ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-  alpha0e_t = NULL, alpha0e_c = NULL,
-  lower.tail = FALSE
-)
-cat(sprintf("P(theta > TV | data, uncontrolled, z=2) = %.4f\n", p_unctrl))
+## ----oc-----------------------------------------------------------------------
+oc <- qdm_oc(des, data.frame(pi_t = seq(0.2, 0.8, by = 0.05), pi_c = 0.2))
+oc
+plot(oc)
 
-## ----unctrl-z-sens------------------------------------------------------------
-z_seq <- 0:12
-p_z   <- sapply(z_seq, function(z) {
-  pbayespostpred1bin(
-    prob = 'posterior', design = 'uncontrolled', theta0 = 0.20,
-    n_t = 12, n_c = 12, y_t = 8, y_c = NULL,
-    a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-    m_t = NULL, m_c = NULL, z = z,
-    ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-    alpha0e_t = NULL, alpha0e_c = NULL,
-    lower.tail = FALSE
-  )
-})
-data.frame(z = z_seq, P_gt_TV = round(p_z, 4))
+## ----oc-hyp-------------------------------------------------------------------
+oc_hyp <- qdm_oc(des_hyp, data.frame(pi_t = seq(0.2, 0.8, by = 0.05)))
+plot(oc_hyp)
 
-## ----ext-post-----------------------------------------------------------------
-p_ext <- pbayespostpred1bin(
-  prob = 'posterior', design = 'external', theta0 = 0.20,
-  n_t = 12, n_c = 12, y_t = 8, y_c = 3,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  m_t = NULL, m_c = NULL, z = NULL,
-  ne_t = 15L, ne_c = 15L, ye_t = 5L, ye_c = 4L,
-  alpha0e_t = 0.5, alpha0e_c = 0.5,
-  lower.tail = FALSE
-)
-cat(sprintf("P(theta > TV | data, external, alpha0e=0.5) = %.4f\n", p_ext))
+## ----boundary-----------------------------------------------------------------
+b <- qdm_boundary(des)
+b
+plot(b)
 
-## ----ext-borrowing------------------------------------------------------------
-# alpha0e must be in (0, 1]; avoid alpha0e = 0
-ae_seq <- c(0.01, seq(0.1, 1.0, by = 0.1))
-p_ae   <- sapply(ae_seq, function(ae) {
-  pbayespostpred1bin(
-    prob = 'posterior', design = 'external', theta0 = 0.20,
-    n_t = 12, n_c = 12, y_t = 8, y_c = 3,
-    a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-    m_t = NULL, m_c = NULL, z = NULL,
-    ne_t = 15L, ne_c = 15L, ye_t = 5L, ye_c = 4L,
-    alpha0e_t = 0.5, alpha0e_c = ae,
-    lower.tail = FALSE
-  )
-})
-data.frame(alpha0e_c = ae_seq, P_gt_TV = round(p_ae, 4))
+## ----boundary-fixed-----------------------------------------------------------
+b_fix <- qdm_boundary(des_fix, n_t = seq(10, 40, by = 5))
+b_fix
+plot(b_fix)
 
-## ----oc-controlled, fig.width = 8, fig.height = 6-----------------------------
-oc_ctrl <- pbayesdecisionprob1bin(
-  prob      = 'posterior',
-  design    = 'controlled',
-  theta_TV  = 0.30,  theta_MAV = 0.15,  theta_NULL = NULL,
-  gamma_go  = 0.80,  gamma_nogo = 0.20,
-  pi_t      = seq(0.10, 0.80, by = 0.05),
-  pi_c      = rep(0.10, length(seq(0.10, 0.80, by = 0.05))),
-  n_t = 12,  n_c = 12,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  z = NULL, m_t = NULL, m_c = NULL,
-  ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-  alpha0e_t = NULL, alpha0e_c = NULL,
-  error_if_Miss = TRUE, Gray_inc_Miss = FALSE
-)
-print(oc_ctrl)
-plot(oc_ctrl, base_size = 20)
+## ----safety-------------------------------------------------------------------
+crit_ae <- criterion_posterior(theta_tv = -0.1, theta_mav = 0,
+                               gamma_go = 0.6, gamma_nogo = 0.7,
+                               direction = "less")
+des_ae <- design_binary(n_t = 12, n_c = 12, prior_t = jeffreys,
+                        prior_c = jeffreys, criterion = crit_ae)
+dec_ae <- qdm_decide(des_ae, data_t = data_binary(12, 2),
+                     data_c = data_binary(12, 6))
+dec_ae
+post_t <- dec_ae$posterior_t
+post_c <- dec_ae$posterior_c
+pbetadiff(-0.1, a_t = post_t[["a"]], b_t = post_t[["b"]],
+          a_c = post_c[["a"]], b_c = post_c[["b"]])
+pbetadiff(0, a_t = post_t[["a"]], b_t = post_t[["b"]],
+          a_c = post_c[["a"]], b_c = post_c[["b"]], lower.tail = FALSE)
 
-## ----getgamma-ctrl, fig.width = 8, fig.height = 6-----------------------------
-res_gamma <- getgamma1bin(
-  prob      = 'posterior',
-  design    = 'controlled',
-  theta_TV  = 0.30, theta_MAV = 0.15, theta_NULL = NULL,
-  pi_t_go   = 0.10, pi_c_go   = 0.10,
-  pi_t_nogo = 0.30, pi_c_nogo = 0.10,
-  target_go = 0.05, target_nogo = 0.20,
-  n_t = 12L, n_c = 12L,
-  a_t = 0.5, b_t = 0.5, a_c = 0.5, b_c = 0.5,
-  z = NULL, m_t = NULL, m_c = NULL,
-  ne_t = NULL, ne_c = NULL, ye_t = NULL, ye_c = NULL,
-  alpha0e_t = NULL, alpha0e_c = NULL,
-  gamma_grid = seq(0.01, 0.99, by = 0.01)
-)
-plot(res_gamma, base_size = 20)
+## ----safety-oc----------------------------------------------------------------
+plot(qdm_oc(des_ae, data.frame(pi_t = seq(0.1, 0.6, by = 0.05),
+                               pi_c = 0.4)))
+qdm_boundary(des_ae)
+
+## ----calibrate----------------------------------------------------------------
+cal <- qdm_calibrate(des,
+                     scenario_go = data.frame(pi_t = 0.2, pi_c = 0.2),
+                     scenario_nogo = data.frame(pi_t = 0.5, pi_c = 0.2),
+                     target_go = 0.05, target_nogo = 0.2)
+cal
+plot(cal)
+
+## ----calibrated-oc------------------------------------------------------------
+qdm_oc(cal$design, data.frame(pi_t = c(0.2, 0.35, 0.5), pi_c = 0.2))
 

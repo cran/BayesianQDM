@@ -1,0 +1,471 @@
+# BayesianQDM 1.0.0
+
+This version is a redesign of the package and is not backward compatible with
+version 0.1.0. A study is described by small specification objects (priors,
+data, external data, hypothetical controls and decision criteria) that are
+combined into a design, and three functions work with any design:
+`qdm_decide()`, `qdm_oc()` and `qdm_calibrate()`. `qdm_boundary()` shows the
+observed data that lead to each decision. Formulas and numerical
+methods that were wrong in version 0.1.0 have been corrected (see below), so
+some results differ from those of version 0.1.0. `vignette("migration")`
+shows how to translate code written for version 0.1.0.
+
+## Correspondence with version 0.1.0
+
+| Version 0.1.0 | Version 1.0.0 |
+|---|---|
+| `pbayespostpred1bin()`, `pbayespostpred1cont()`, `pbayespostpred2bin()`, `pbayespostpred2cont()` | `qdm_decide()` with a design and observed data |
+| `pbayesdecisionprob1bin()`, `pbayesdecisionprob1cont()`, `pbayesdecisionprob2bin()`, `pbayesdecisionprob2cont()` | `qdm_oc()` |
+| `getgamma1bin()`, `getgamma1cont()`, `getgamma2bin()`, `getgamma2cont()` | `qdm_calibrate()` |
+| Arguments `prob`, `design`, `prior`, `CalcMethod`, `theta_*`, `gamma_*`, `a_*`, `b_*`, `kappa0_*` and similar | Arguments of `criterion_*()`, `prior_*()` and `design_*()` |
+| Arguments `ne_*`, `ye_*`, `alpha0e_*`, `bar_ye_*`, `se_*` | `borrow(data_*(...), a0)` |
+| Arguments `z`, `z00` to `z11`, `mu0_c`, `r` | `hypothetical()` |
+| `ptdiff_NI()`, `ptdiff_MC()`, `ptdiff_MM()` | `ptdiff()` with `method = "NI"`, `"MC"` or `"MM"` |
+| `pbetadiff()`, `pbetabinomdiff()` | Same names, with the arguments ordered by group |
+| `getjointbin()` | `cellprob_binary2()` |
+| `allmultinom()` | Internal function |
+| `rdirichlet()` | Same name |
+| `print()` and `plot()` methods for eight classes | Methods for `qdm_decision`, `qdm_oc`, `qdm_calibration`, `qdm_boundary`, `qdm_design` and the specification objects |
+
+## Documentation, validation and computation
+
+* Seven vignettes: an overview, one for each type of endpoint, and a guide
+  to migrating from version 0.1.0.
+* `inst/validation/` contains scripts that compare the package with
+  published and submitted results (Kang et al., 2026; Huang, Talukder, Han
+  and Kuan, 2019; Huang et al., submitted; Yamaguchi, Homma, Takeda and
+  Maruo, submitted; Yamaguchi et al., submitted), and
+  `inst/validation/results/summary.md` reports the comparisons, with a
+  registered reason for every difference beyond rounding, including the
+  results that are not reproduced.
+* The numerical integration and the Monte Carlo loops are written in C++
+  with Rcpp.
+
+## Specification functions
+
+* Priors: `prior_beta()`, `prior_dirichlet()`, `prior_nix()`, `prior_niw()`,
+  `prior_gamma()` and `prior_vague()`.
+* Data summaries: `data_binary()`, `data_continuous()`, `data_binary2()`,
+  `data_continuous2()` and `data_tte()`.
+* Conduct of a study with a time-to-event endpoint (enrollment, dropout and
+  time of the analysis): `conduct_tte()`.
+* External data with a power prior weight from 0 to 1: `borrow()`.
+* Hypothetical control for uncontrolled studies: `hypothetical()`.
+* Decision criteria: `criterion_posterior()` and `criterion_predictive()`.
+  For all endpoints, the Go criterion is that the probability of the Go
+  region is at least `gamma_go` and the NoGo criterion is that the
+  probability of the NoGo region is at least `gamma_nogo`.
+* `criterion_posterior()` and `criterion_predictive()` have the argument
+  `direction`. With `direction = "greater"` (the default), larger effects
+  are favorable, as in version 0.1.0. With `direction = "less"`, smaller
+  effects are favorable, for example for the rate of an adverse event or a
+  hazard ratio: the Go region is that the effect is below `theta_tv` (or,
+  for the predictive criterion, that the future effect is below
+  `theta_null`), the NoGo region is that it is at least `theta_mav` (at
+  least `theta_null` for the predictive criterion), and
+  `theta_tv` must be smaller than `theta_mav`. For two endpoints, the
+  direction can be set for each endpoint, for example an efficacy endpoint
+  and a safety endpoint.
+* `qdm_regions()` shows the numbering of the regions for two endpoints.
+
+## Designs and operations: one binary endpoint
+
+* `design_binary()` specifies a study with one binary endpoint: sample sizes,
+  Beta priors, external data for either group (`borrow()`), and a concurrent,
+  external-only (`n_c = 0` with `external_c`) or hypothetical (`n_c = 0` with
+  `hypothetical_c`) control group.
+* `qdm_decide()` computes the probabilities of the Go and NoGo regions for
+  observed data and returns the decision: Go, NoGo, Gray, or Miss (both
+  criteria met).
+* `qdm_oc()` computes the probabilities of the four decisions under
+  scenarios for the true response rates by exact enumeration of the
+  outcomes. Miss decisions are reported in their own column with a warning;
+  the arguments `error_if_Miss` and `Gray_inc_Miss` of version 0.1.0 are
+  removed.
+* `qdm_calibrate()` chooses `gamma_go` and `gamma_nogo` as the smallest grid
+  values for which the probabilities that the Go criterion is met under one
+  scenario and that the NoGo criterion is met under another are at most
+  their targets (version 0.1.0 required them to be less than the targets),
+  and returns the design with these thresholds and its decision
+  probabilities.
+* `print()` methods for designs, decisions, operating characteristics and
+  calibrations, and `plot()` methods (ggplot2) for operating characteristics
+  and calibrations. Without a concurrent control group, the thresholds in
+  the plot of operating characteristics are shifted by the mean of the
+  distribution of the control group.
+* Probabilities are no longer set to 0 below `.Machine$double.eps^0.25`. A
+  probability that is below a threshold by less than 1e-10 is treated as
+  equal to the threshold, so that exact ties are not decided by rounding
+  errors.
+
+## Designs and operations: one continuous endpoint
+
+* `design_continuous()` specifies a study with one normally distributed
+  endpoint: sample sizes, Normal-Inverse-chi-squared (`prior_nix()`) or vague
+  (`prior_vague()`) priors, external data for either group (`borrow()`), a
+  concurrent, external-only or hypothetical control group, and the method
+  used to compute the probabilities (`"NI"`, `"MM"` or `"MC"`).
+* External data enter through the conjugate representation of the power
+  prior. With the vague prior, the posterior distribution of the mean has
+  `a0 * n_e + n - 1` degrees of freedom, and the posterior scale uses the
+  same denominator (version 0.1.0 used `a0 * n_e + n`, so the posterior did
+  not reduce to the one without external data as `a0` tends to 0).
+* The posterior predictive distribution of the mean of `m` future subjects
+  is `t(nu_n, mu_n, sigma_n^2 * (1 / kappa_n + 1 / m))`. Version 0.1.0 used
+  the squared scale `sigma_n^2 * (1 + 1 / kappa_n) / m`, which treats the `m`
+  future subjects as independent draws from the predictive distribution of
+  one subject and understates the uncertainty for `m` of 2 or more.
+* A hypothetical control (`hypothetical(mean = mu0c, r = r)`) gives the
+  control mean the distribution `t(nu_nt, mu0c, r * sigma_nt^2 / kappa_nt)`
+  (Kang et al., 2026, Section 4.2.4). For the predictive criterion its
+  squared scale is `r * sigma_nt^2 * (1 / kappa_nt + 1 / m_c)`.
+* `qdm_oc()` and `qdm_calibrate()` simulate the sample means and standard
+  deviations of `nsim` studies, with the same random numbers for all
+  scenarios. With `method = "MC"`, the probabilities of the Go and NoGo
+  regions are estimated from the same draws, so that they add up to 1 for
+  the predictive criterion.
+* `qdm_decide()` has a `seed` argument for designs with `method = "MC"`.
+
+## Designs and operations: two binary endpoints
+
+* `design_binary2()` specifies a study with two binary endpoints: sample
+  sizes, Dirichlet priors for the probabilities of the four combinations of
+  responses (`prior_dirichlet()`), external data for either group
+  (`borrow(data_binary2(...), a0)`), a concurrent, external-only or
+  hypothetical control group, the number of Monte Carlo draws `nMC`, and
+  whether the operating characteristics are computed by enumerating all
+  outcomes (`enumerate = TRUE`, the default) or by simulation.
+* For two endpoints, `criterion_posterior()` and `criterion_predictive()`
+  have the argument `rule`. With `rule = "joint"` (the default), the
+  criteria are on the probabilities of unions of regions (`go_regions` and
+  `nogo_regions`, numbered as in `qdm_regions()`). With `rule = "and"` or
+  `rule = "or"`, the criteria are on each endpoint separately (the
+  probability that the effect exceeds its TV, or is at most its MAV), with
+  one threshold for both endpoints or one per endpoint.
+* The posterior predictive probabilities of the regions are computed
+  exactly from the joint distribution of the numbers of future responders
+  on the two endpoints (Dirichlet-multinomial distribution) instead of by
+  Monte Carlo simulation. A future effect equal to the null value is not
+  counted as larger; version 0.1.0 compared differences of rounded
+  proportions, so some exact ties were counted as larger.
+* The posterior probabilities of the regions are estimated with `nMC`
+  draws (default 10000) from the Dirichlet posterior distributions, computed
+  in C++. The probabilities of all regions, and of the Go and NoGo regions,
+  are estimated from the same draws, and `qdm_decide()` reports all of them.
+  `qdm_decide()`, `qdm_oc()` and `qdm_calibrate()` take `seed` for these
+  draws.
+* `qdm_oc()` takes scenarios with the columns `pi_t1`, `pi_t2`, `rho_t`,
+  `pi_c1`, `pi_c2` and `rho_c`. With enumeration, the region probabilities
+  are computed once for every pair of treatment and control outcomes, with
+  the same Monte Carlo draws for all pairs, and weighted by the multinomial
+  probabilities under each scenario. With simulation, all scenarios use the
+  same uniform random numbers. Enumeration is limited to 1e7 pairs of
+  outcomes (for example, 24 subjects in each group). A scenario whose
+  correlation is outside the feasible range for its response rates is not
+  evaluable: its probabilities are `NA` with a warning (version 0.1.0
+  stopped with an error in its Monte Carlo path). `qdm_calibrate()` requires
+  feasible scenarios.
+* `plot()` of operating characteristics for two endpoints draws a heat map
+  of the probability of each decision over the effects on the two endpoints
+  and marks scenarios that are not evaluable with "NE".
+
+## Designs and operations: two continuous endpoints
+
+* `design_continuous2()` specifies a study with two continuous endpoints:
+  sample sizes, Normal-Inverse-Wishart (`prior_niw()`) or vague
+  (`prior_vague()`) priors, external data for either group
+  (`borrow(data_continuous2(...), a0)`), a concurrent, external-only or
+  hypothetical (`hypothetical(mean = c(m1, m2), r = r)`) control group, the
+  decision criterion for two endpoints (with `rule` as for two binary
+  endpoints), and the method used to compute the probabilities (`"MM"` or
+  `"MC"`).
+* The posterior parameters are updated with the external data (power prior)
+  and then with the current data; the vague prior corresponds to
+  `kappa0 = 0`, `nu0 = -1` and `Lambda0 = 0`.
+* The posterior predictive distribution of the mean of `m` future subjects
+  has the scale matrix `(1 / kappa_n + 1 / m) * Lambda_n / (nu_n - 1)`.
+  Version 0.1.0 used `(1 + kappa_n) / kappa_n * Lambda_n / (nu_n - 1) / m`,
+  which treats the `m` future subjects as independent draws from the
+  predictive distribution of one subject.
+* With `method = "MM"`, the moment-matching approximation of the difference
+  of two bivariate t distributions is used, and its rectangle probabilities
+  are computed by numerical integration in C++ for real degrees of freedom
+  (version 0.1.0 rounded the degrees of freedom to an integer for
+  `mvtnorm::pmvt()`). With `method = "MC"`, the probabilities of all
+  regions are estimated from the same draws, and every simulated study uses
+  its own draws (version 0.1.0 used the same draws for all simulated
+  studies, so the Monte Carlo error did not average out).
+* `qdm_oc()` takes scenarios with the columns `mu_t1`, `mu_t2`, `sd_t1`,
+  `sd_t2`, `rho_t`, `mu_c1`, `mu_c2`, `sd_c1`, `sd_c2` and `rho_c`, and
+  simulates the sample means and the sums of squares and cross-products
+  (Bartlett decomposition of the Wishart distribution) of `nsim` studies
+  with the same random numbers for all scenarios.
+
+## Fixed control
+
+* All design functions have the argument `fixed_c` for a single-arm study
+  compared with a known value of the control parameter (a response rate, a
+  mean, a milestone survival probability, or a median survival time for
+  the hazard ratio; one value per endpoint for two endpoints). It requires
+  `n_c = 0` and `prior_c = NULL`. The effect is the treatment parameter
+  minus the fixed value (for the hazard ratio, the treatment hazard divided
+  by the control hazard `log(2) / fixed_c`), so the probabilities depend
+  only on the posterior distribution of the treatment group: Beta
+  probabilities (one binary endpoint), t probabilities (one continuous
+  endpoint), probabilities of the bivariate t distribution by numerical
+  integration for any degrees of freedom (two continuous endpoints), Monte
+  Carlo draws from the Dirichlet posterior (posterior probabilities for two
+  binary endpoints), Gamma probabilities (posterior probabilities for a
+  time-to-event endpoint), and exact predictive probabilities for binary
+  endpoints, in which a future proportion equal to the fixed value plus the
+  null value is not counted as larger. The argument `method` is not used
+  for continuous endpoints.
+* Without a concurrent control group, the thresholds in the plot of
+  operating characteristics are shifted by the fixed value.
+
+## Designs and operations: one time-to-event endpoint
+
+* `design_tte()` specifies a study with one time-to-event endpoint evaluated
+  by the survival probability at a milestone time or by the hazard ratio
+  (see below): exponential event times with Gamma priors on the hazards
+  (`prior_gamma()`), data summarized by the number of events and the total
+  observed time (`data_tte()`), external data for either group through a
+  power prior, and a concurrent, external-only, hypothetical or fixed
+  control group. With the milestone survival, the effect is the difference
+  of the milestone survival probabilities.
+* Posterior probabilities are computed by numerical integration over the
+  control hazard (`psurvdiff()`), or exactly for a fixed control.
+  Posterior predictive probabilities are estimated by simulating `nMC`
+  future studies conducted as specified by `conduct_future`, with hazards
+  drawn from the posterior distributions; the milestone survival of each
+  group in the future study is estimated at the posterior mean of the
+  hazard given the future data and the prior of the group.
+* `qdm_oc()` and `qdm_calibrate()` simulate `nsim` studies with piecewise
+  uniform enrollment, piecewise exponential dropout and an analysis at a
+  calendar time or at a given number of events among all subjects of the
+  study (`conduct_tte()`), under scenarios given by the median survival
+  times (`median_t`, `median_c`), with the same random numbers for all
+  scenarios.
+* With `effect = "hazard_ratio"`, the effect is the hazard ratio
+  `lambda_t / lambda_c` (Huang, Talukder, Han and Kuan, 2019), usually with
+  `direction = "less"` in the criterion. The posterior distribution of the
+  hazard ratio is a scaled F distribution, so posterior probabilities are
+  exact (`phazardratio()`); a fixed control is given by its median survival
+  time. Posterior predictive probabilities compare the ratio of the
+  estimated hazards of the future study with `theta_null`.
+* `inst/validation/` reproduces the probabilities of a Go decision in
+  Table 1 of Huang et al. (2019) (a randomized study analyzed at a given
+  number of events) with the hazard ratio and the posterior criterion.
+
+## Decision boundaries
+
+* `qdm_boundary()` returns the intervals of an observed quantity that lead
+  to Go, NoGo, Gray and Miss decisions, for each value of a second quantity:
+  the number of treatment responders for each number of control responders
+  (one binary endpoint with a concurrent control group) or for each sample
+  size (without one), the observed treatment mean for each standard
+  deviation or sample size (one continuous endpoint), the observed
+  treatment mean of endpoint 2 for each observed mean of endpoint 1 (two
+  continuous endpoints), and the number of events for each total observed
+  time (time-to-event endpoint). The intervals are also given as observed
+  response rates or milestone survival probabilities and as observed
+  treatment effects (differences from the control group or the fixed
+  control value, or observed hazard ratios). Two binary endpoints are not
+  supported.
+* For observed means, the ends of the intervals are located by bisection
+  between the values of a grid, so they are exact up to the accuracy of the
+  probabilities, provided that a criterion changes at most once between
+  neighboring grid values and not beyond the grid. Decisions that change
+  twice, as with conjugate priors far from the observed data, give several
+  intervals.
+* The `print()` method shows the intervals as tables with one row per
+  condition and one column per decision, for example the numbers of
+  responders out of 20 that lead to Go (`10-20`), the corresponding observed
+  response rates (`50.0% to 100.0%`) and the observed differences from a
+  fixed control rate of 0.2 (`0.3 to 0.8`). The `plot()` method draws the
+  regions of the decisions with the boundary values written on them
+  (`labels`, `label_size`), and for one binary endpoint with a concurrent
+  control group a secondary axis with the observed response rate of the
+  treatment group.
+
+## Plots
+
+* The `plot()` methods for operating characteristics, calibrations and
+  decision boundaries return ggplot2 objects, which can be changed further
+  by adding ggplot2 functions such as `labs()` and `theme()`. In all three
+  plots, arguments set the colors of the decisions (`col_go`, `col_nogo`,
+  `col_gray` and `col_miss`, green, red, gray and orange by default; the
+  calibration plot uses `col_go` and `col_nogo`), the base font size
+  (`base_size`, 11 by default instead of 28 in version 0.1.0) and the
+  position of the legend (`legend_position`). The plots of operating
+  characteristics and calibrations also take the width of the lines
+  (`linewidth`), and the plots of operating characteristics and decision
+  boundaries the size of the text drawn in the plot (`label_size`); the
+  plot of operating characteristics also takes the size of the points
+  (`point_size`).
+  Other arguments are ignored with a warning.
+* The heat maps of two endpoints shade each panel from white (probability 0)
+  to the color of its decision (probability 1); their colors are set by the
+  color arguments. They have no legend, since each cell shows its
+  probability (unless `cell_values = FALSE`). Scenarios that are not
+  evaluable are white and marked "NE".
+* `plot()` of operating characteristics for two endpoints has the argument
+  `overlay`, which replaces `which = "overlay"` of version 0.1.0. With
+  `overlay = TRUE`, a single heat map shows in each cell the decision with
+  the highest probability, shaded in five steps of that probability, with
+  legends for the decisions and the steps (Yamaguchi et al., submitted,
+  Figure 2). `cell_values = FALSE` leaves out the probabilities written in
+  the cells of either heat map.
+
+## Distribution functions
+
+* `pbetadiff()` has the argument order `(q, a_t, b_t, a_c, b_c)`. The range
+  of integration is restricted to the support and split at quantiles of both
+  Beta distributions, so concentrated distributions are integrated
+  accurately. When a shape parameter of the control group is below 1, the
+  integral near the unbounded end of its density is computed after a change
+  of variables that removes the singularity. The computation is done in C++.
+* `pbetabinomdiff()` has the argument order
+  `(q, m_t, a_t, b_t, m_c, a_c, b_c)` and computes the probability mass
+  functions on the log scale, so large numbers of future subjects no longer
+  cause overflow. Values of `q` far outside [-1, 1] are handled exactly.
+* `ptdiff()` replaces `ptdiff_NI()`, `ptdiff_MC()` and `ptdiff_MM()`. The
+  numerical integration now covers the whole real line (version 0.1.0
+  truncated the range, with errors of up to about 3e-4 for small degrees of
+  freedom). It integrates over the group with the smaller scale, splits the
+  range around the peak of the density and the change of the other factor,
+  and integrates the parts far from the origin on a logarithmic scale, so
+  that scale ratios from 1e-9 to 1e3 and degrees of freedom from 0.5 to
+  `Inf` are handled.
+* `rdirichlet()` always returns a matrix.
+* `cellprob_binary2()` replaces `getjointbin()`.
+* `psurvdiff()` computes the distribution function of the difference of two
+  milestone survival probabilities with Gamma distributed exponential
+  hazards, by adaptive quadrature in C++ over the hazard of one group, with
+  the range split at quantiles of both hazards and a change of variables
+  near 0 when a shape parameter is below 1. Each tail is computed directly,
+  so both are accurate near 0.
+* `phazardratio()` computes the distribution function of the ratio of two
+  Gamma distributed hazards from the F distribution.
+
+# BayesianQDM 0.1.0
+
+## Resubmission
+
+* Expanded the MCMC acronym to "Markov chain Monte Carlo (MCMC)" in DESCRIPTION.
+* Added a reference to Kang, Yamaguchi, and Han (2026) in DESCRIPTION.
+* Replaced `\dontrun{}` with `\donttest{}` in examples for `getgamma2bin()` and
+  `getgamma2cont()`.
+
+## Initial Release
+
+Initial release providing a comprehensive Bayesian quantitative decision-making
+framework for clinical trials with single and two-endpoint analyses for binary
+and continuous outcomes.
+
+### Decision Probability Functions
+
+* `pbayesdecisionprob1bin()` - Go/NoGo/Gray decision probabilities for a single
+  binary endpoint
+* `pbayesdecisionprob1cont()` - Go/NoGo/Gray decision probabilities for a single
+  continuous endpoint
+* `pbayesdecisionprob2bin()` - Go/NoGo/Gray decision probabilities for two binary
+  endpoints
+* `pbayesdecisionprob2cont()` - Go/NoGo/Gray decision probabilities for two
+  continuous endpoints
+
+### S3 Methods for Decision Probability Classes
+
+* `print.pbayesdecisionprob1bin()` - Print method for `pbayesdecisionprob1bin` objects
+* `print.pbayesdecisionprob1cont()` - Print method for `pbayesdecisionprob1cont` objects
+* `print.pbayesdecisionprob2bin()` - Print method for `pbayesdecisionprob2bin` objects
+* `print.pbayesdecisionprob2cont()` - Print method for `pbayesdecisionprob2cont` objects
+* `plot.pbayesdecisionprob1bin()` - Plot method for `pbayesdecisionprob1bin` objects;
+  displays Go/NoGo/Gray decision probabilities as a line plot across treatment scenarios
+* `plot.pbayesdecisionprob1cont()` - Plot method for `pbayesdecisionprob1cont` objects;
+  displays Go/NoGo/Gray decision probabilities as a line plot across treatment scenarios
+* `plot.pbayesdecisionprob2bin()` - Plot method for `pbayesdecisionprob2bin` objects;
+  displays Go/NoGo/Gray decision probabilities as a tile or scatter plot over a
+  two-dimensional treatment scenario grid
+* `plot.pbayesdecisionprob2cont()` - Plot method for `pbayesdecisionprob2cont` objects;
+  displays Go/NoGo/Gray decision probabilities as a tile or scatter plot over a
+  two-dimensional treatment scenario grid
+
+### S3 Methods for Optimal Threshold Search Classes
+
+* `plot.getgamma1bin()` - Plot method for `getgamma1bin` objects; displays
+  calibration curves of marginal Go and NoGo probabilities against the threshold
+  grid for a single binary endpoint
+* `plot.getgamma1cont()` - Plot method for `getgamma1cont` objects; displays
+  calibration curves of marginal Go and NoGo probabilities against the threshold
+  grid for a single continuous endpoint
+* `plot.getgamma2bin()` - Plot method for `getgamma2bin` objects; displays
+  calibration curves of marginal Go and NoGo probabilities against the threshold
+  grid for two binary endpoints
+* `plot.getgamma2cont()` - Plot method for `getgamma2cont` objects; displays
+  calibration curves of marginal Go and NoGo probabilities against the threshold
+  grid for two continuous endpoints
+
+### Posterior and Predictive Probability Functions
+
+* `pbayespostpred1bin()` - Posterior or predictive probability for a single binary
+  endpoint
+* `pbayespostpred1cont()` - Posterior or predictive probability for a single
+  continuous endpoint
+* `pbayespostpred2bin()` - Joint region probabilities for two binary endpoints
+* `pbayespostpred2cont()` - Joint region probabilities for two continuous endpoints
+
+### Optimal Threshold Search Functions
+
+* `getgamma1bin()` - Find optimal Go/NoGo thresholds for a single binary endpoint
+  by grid search over candidate gamma values
+* `getgamma1cont()` - Find optimal Go/NoGo thresholds for a single continuous
+  endpoint by grid search over candidate gamma values
+* `getgamma2bin()` - Find optimal Go/NoGo thresholds for two binary endpoints by
+  grid search over candidate gamma value pairs
+* `getgamma2cont()` - Find optimal Go/NoGo thresholds for two continuous endpoints
+  by grid search over candidate gamma value pairs
+
+### Distribution Functions for Continuous Endpoints
+
+* `ptdiff_NI()` - CDF for the difference of two t-distributions via numerical
+  integration
+* `ptdiff_MC()` - CDF for the difference of two t-distributions via Monte Carlo
+  simulation
+* `ptdiff_MM()` - CDF for the difference of two t-distributions via
+  Moment-Matching approximation
+
+### Distribution Functions for Binary Endpoints
+
+* `pbetadiff()` - CDF for the difference of two independent Beta distributions
+* `pbetabinomdiff()` - Beta-binomial posterior predictive probability
+
+### Sampling Functions
+
+* `rdirichlet()` - Random sampler for the Dirichlet distribution
+
+### Utility Functions
+
+* `getjointbin()` - Joint binary probability from marginals and a correlation
+  parameter
+* `allmultinom()` - Enumerate all multinomial outcome combinations
+
+### Study Designs
+
+* Controlled design
+* Uncontrolled design (hypothetical control)
+* External design with power priors
+
+### Prior Distributions
+
+* Binary endpoints: Beta and Dirichlet conjugate priors
+* Single continuous endpoints: Normal-Inverse-Chi-squared conjugate prior and
+  vague (Jeffreys) prior
+* Two continuous endpoints: Normal-Inverse-Wishart conjugate prior and vague prior
+
+### Calculation Methods for Continuous Endpoints
+
+* NI (Numerical Integration): exact computation via adaptive quadrature
+* MC (Monte Carlo): simulation-based estimation
+* MM (Moment-Matching): closed-form approximation; fully vectorised and
+  recommended for large-scale simulation studies

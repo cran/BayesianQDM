@@ -12,7 +12,7 @@
 
 
 
-<title>Single Continuous Endpoint</title>
+<title>Single continuous endpoint</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -337,692 +337,326 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<h1 class="title toc-ignore">Single Continuous Endpoint</h1>
+<h1 class="title toc-ignore">Single continuous endpoint</h1>
 
 
 
-<div id="motivating-scenario" class="section level2">
-<h2>Motivating Scenario</h2>
-<p>We use a hypothetical Phase IIa proof-of-concept (PoC) trial in
-moderate-to-severe rheumatoid arthritis (RA). The investigational drug
-is compared with placebo in a 1:1 randomised controlled trial with <span class="math inline">\(n_t = n_c = 15\)</span> patients per group.</p>
-<p>Endpoint: change from baseline in DAS28 score (a larger decrease
-indicates greater improvement).</p>
-<p>Clinically meaningful thresholds (posterior probability):</p>
+<p>This vignette describes the analysis of a proof-of-concept (PoC)
+study with one normally distributed endpoint.
+<code>vignette(&quot;overview&quot;)</code> introduces the decision criteria.</p>
+<div id="model" class="section level2">
+<h2>Model</h2>
+<p>In group <span class="math inline">\(k\)</span> (<span class="math inline">\(k = t, c\)</span>), the outcomes follow <span class="math inline">\(N(\mu_k, \sigma_k^2)\)</span>, and the data are
+summarized by the number of subjects <span class="math inline">\(n_k\)</span>, the sample mean <span class="math inline">\(\bar y_k\)</span> and the sample standard
+deviation <span class="math inline">\(s_k\)</span>
+(<code>data_continuous()</code>). The treatment effect is <span class="math inline">\(\theta = \mu_t - \mu_c\)</span>.</p>
+<p>With the Normal-Inverse-chi-squared prior (<code>prior_nix()</code>),
+<span class="math display">\[\mu_k \mid \sigma_k^2 \sim N(\mu_0,
+\sigma_k^2 / \kappa_0), \qquad
+\sigma_k^2 \sim \textrm{Inv-}\chi^2(\nu_0, \sigma_0^2),\]</span> the
+posterior distribution has the same form with parameters <span class="math inline">\(\kappa_n = \kappa_0 + n\)</span>, <span class="math inline">\(\mu_n = (\kappa_0 \mu_0 + n \bar y) /
+\kappa_n\)</span>, <span class="math inline">\(\nu_n = \nu_0 +
+n\)</span> and <span class="math inline">\(\nu_n \sigma_n^2 = \nu_0
+\sigma_0^2 + (n - 1) s^2 +
+\kappa_0 n (\bar y - \mu_0)^2 / \kappa_n\)</span>, and the posterior
+distribution of the mean is the t distribution <span class="math inline">\(t_{\nu_n}(\mu_n, \sigma_n^2 / \kappa_n)\)</span>.
+With the vague prior <span class="math inline">\(p(\mu, \sigma^2)
+\propto \sigma^{-2}\)</span> (<code>prior_vague()</code>), it is <span class="math inline">\(t_{n - 1}(\bar y, s^2 / n)\)</span>.</p>
+<p>For the predictive criterion, the mean of <span class="math inline">\(m\)</span> future subjects of a group has the
+posterior predictive distribution <span class="math display">\[t_{\nu_n}\left(\mu_n, \; \sigma_n^2
+\left(\frac{1}{\kappa_n} +
+\frac{1}{m}\right)\right).\]</span> Version 0.1.0 of the package used
+the squared scale <span class="math inline">\(\sigma_n^2 (1 + 1 /
+\kappa_n) / m\)</span>, which treats the <span class="math inline">\(m\)</span> future subjects as independent draws
+from the predictive distribution of one subject and understates the
+uncertainty.</p>
+<p>The posterior and predictive probabilities of the Go and NoGo regions
+are probabilities of the difference of two t variables, computed by
+<code>ptdiff()</code> with one of three methods (argument
+<code>method</code> of <code>design_continuous()</code>):</p>
 <ul>
-<li>Target Value (<span class="math inline">\(\theta_{\mathrm{TV}}\)</span>) = 1.5 (ambitious
-target)</li>
-<li>Minimum Acceptable Value (<span class="math inline">\(\theta_{\mathrm{MAV}}\)</span>) = 0.5 (lower
-bar)</li>
+<li><code>&quot;NI&quot;</code> (the default): numerical integration over the
+whole real line, exact up to a small numerical error;</li>
+<li><code>&quot;MM&quot;</code>: the moment-matching approximation of the
+difference by a single t distribution (Yamaguchi, Homma, Takeda and
+Maruo, submitted), which requires more than 4 degrees of freedom in both
+groups;</li>
+<li><code>&quot;MC&quot;</code>: Monte Carlo simulation with <code>nMC</code>
+draws.</li>
 </ul>
-<p>Null hypothesis threshold (predictive probability): <span class="math inline">\(\theta_{\mathrm{NULL}} = 1.0\)</span>.</p>
-<p>Decision thresholds: <span class="math inline">\(\gamma_{\mathrm{go}}
-= 0.80\)</span> (Go), <span class="math inline">\(\gamma_{\mathrm{nogo}}
-= 0.20\)</span> (NoGo).</p>
-<p>Observed data (used in Sections 2–4): <span class="math inline">\(\bar{y}_t = 3.2\)</span>, <span class="math inline">\(s_t = 2.0\)</span> (treatment); <span class="math inline">\(\bar{y}_c = 1.1\)</span>, <span class="math inline">\(s_c = 1.8\)</span> (control).</p>
-<hr />
 </div>
-<div id="bayesian-model-normal-inverse-chi-squared-conjugate" class="section level2">
-<h2>1. Bayesian Model: Normal-Inverse-Chi-Squared Conjugate</h2>
-<div id="prior-distribution" class="section level3">
-<h3>1.1 Prior Distribution</h3>
-<p>For group <span class="math inline">\(j\)</span> (<span class="math inline">\(j = t\)</span>: treatment, <span class="math inline">\(j = c\)</span>: control), patient <span class="math inline">\(i\)</span> (<span class="math inline">\(i = 1,
-\ldots, n_j\)</span>), we model the continuous outcome as</p>
-<p><span class="math display">\[y_{ij} \mid \mu_j, \sigma_j^2
-\;\overset{iid}{\sim}\;
-  \mathcal{N}(\mu_j,\, \sigma_j^2).\]</span></p>
-<p>The conjugate prior is the Normal-Inverse-Chi-squared (N-Inv-<span class="math inline">\(\chi^2\)</span>) distribution:</p>
-<p><span class="math display">\[(\mu_j,\, \sigma_j^2) \;\sim\;
-  \mathrm{N\text{-}Inv\text{-}\chi^2}
-  \!\left(\mu_{0j},\, \kappa_{0j},\, \nu_{0j},\,
-\sigma_{0j}^2\right),\]</span></p>
-<p>where <span class="math inline">\(\mu_{0j}\)</span>
-(<code>mu0_t</code>, <code>mu0_c</code>) is the prior mean, <span class="math inline">\(\kappa_{0j}\)</span> (<code>kappa0_t</code>,
-<code>kappa0_c</code>) <span class="math inline">\(&gt; 0\)</span> the
-prior precision (pseudo-sample size), <span class="math inline">\(\nu_{0j}\)</span> (<code>nu0_t</code>,
-<code>nu0_c</code>) <span class="math inline">\(&gt; 0\)</span> the
-prior degrees of freedom, and <span class="math inline">\(\sigma_{0j}^2\)</span> (<code>sigma0_t</code>,
-<code>sigma0_c</code>) <span class="math inline">\(&gt; 0\)</span> the
-prior scale.</p>
-<p>The vague (Jeffreys) prior is obtained by letting <span class="math inline">\(\kappa_{0j} \to 0\)</span> and <span class="math inline">\(\nu_{0j} \to 0\)</span>, which places minimal
-information on the parameters.</p>
+<div id="decision-for-observed-data" class="section level2">
+<h2>Decision for observed data</h2>
+<p>A study with 12 subjects in each group and vague priors, with <span class="math inline">\(\theta_{TV} = 15\)</span> and <span class="math inline">\(\theta_{MAV} = 5\)</span>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>crit <span class="ot">&lt;-</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="dv">15</span>, <span class="at">theta_mav =</span> <span class="dv">5</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>                            <span class="at">gamma_go =</span> <span class="fl">0.6</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.7</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>des <span class="ot">&lt;-</span> <span class="fu">design_continuous</span>(<span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>, <span class="at">prior_t =</span> <span class="fu">prior_vague</span>(),</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>                         <span class="at">prior_c =</span> <span class="fu">prior_vague</span>(), <span class="at">criterion =</span> crit)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>dec <span class="ot">&lt;-</span> <span class="fu">qdm_decide</span>(des, <span class="at">data_t =</span> <span class="fu">data_continuous</span>(<span class="at">n =</span> <span class="dv">12</span>, <span class="at">mean =</span> <span class="dv">22</span>, <span class="at">sd =</span> <span class="dv">25</span>),</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>                  <span class="at">data_c =</span> <span class="fu">data_continuous</span>(<span class="at">n =</span> <span class="dv">12</span>, <span class="at">mean =</span> <span class="dv">2</span>, <span class="at">sd =</span> <span class="dv">25</span>))</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>dec</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 15 | data) = 0.6778 (threshold 0.6, met)</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 5 | data) = 0.08784 (threshold 0.7, not met)</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co">#&gt;   Treatment: mean ~ t(df = 11, location = 22, scale = 7.217)</span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt;   Control:   mean ~ t(df = 11, location = 2, scale = 7.217)</span></span></code></pre></div>
+<p>The posterior distribution of each mean is <span class="math inline">\(t_{11}(\bar y, s^2 / 12)\)</span>. The three
+methods of <code>ptdiff()</code> give similar probabilities of the Go
+region:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>post_t <span class="ot">&lt;-</span> dec<span class="sc">$</span>posterior_t</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>post_c <span class="ot">&lt;-</span> dec<span class="sc">$</span>posterior_c</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>scale_t <span class="ot">&lt;-</span> post_t[[<span class="st">&quot;sigma&quot;</span>]] <span class="sc">/</span> <span class="fu">sqrt</span>(post_t[[<span class="st">&quot;kappa&quot;</span>]])</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>scale_c <span class="ot">&lt;-</span> post_c[[<span class="st">&quot;sigma&quot;</span>]] <span class="sc">/</span> <span class="fu">sqrt</span>(post_c[[<span class="st">&quot;kappa&quot;</span>]])</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">sapply</span>(<span class="fu">c</span>(<span class="st">&quot;NI&quot;</span>, <span class="st">&quot;MM&quot;</span>, <span class="st">&quot;MC&quot;</span>), <span class="cf">function</span>(m) {</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="fu">ptdiff</span>(<span class="dv">15</span>, <span class="at">mu_t =</span> post_t[[<span class="st">&quot;mu&quot;</span>]], <span class="at">scale_t =</span> scale_t, <span class="at">df_t =</span> post_t[[<span class="st">&quot;nu&quot;</span>]],</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>         <span class="at">mu_c =</span> post_c[[<span class="st">&quot;mu&quot;</span>]], <span class="at">scale_c =</span> scale_c, <span class="at">df_c =</span> post_c[[<span class="st">&quot;nu&quot;</span>]],</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>         <span class="at">method =</span> m, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>})</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;        NI        MM        MC </span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; 0.6777935 0.6780038 0.6791000</span></span></code></pre></div>
 </div>
-<div id="posterior-distribution" class="section level3">
-<h3>1.2 Posterior Distribution</h3>
-<p>Given <span class="math inline">\(n_j\)</span> observations with
-sample mean <span class="math inline">\(\bar{y}_j\)</span> and sample
-standard deviation <span class="math inline">\(s_j\)</span>, the
-posterior parameters are updated as follows:</p>
-<p><span class="math display">\[\kappa_{nj} = \kappa_{0j} + n_j, \qquad
-  \nu_{nj} = \nu_{0j} + n_j,\]</span></p>
-<p><span class="math display">\[\mu_{nj} = \frac{\kappa_{0j}\,\mu_{0j} +
-n_j\,\bar{y}_j}{\kappa_{nj}},\]</span></p>
-<p><span class="math display">\[\sigma_{nj}^2 =
-\frac{\nu_{0j}\,\sigma_{0j}^2 + (n_j - 1)\,s_j^2 +
-  \dfrac{n_j\,\kappa_{0j}}{\kappa_{nj}}\,(\mu_{0j} - \bar{y}_j)^2}
-  {\nu_{nj}}.\]</span></p>
-<p>The marginal posterior of the group mean <span class="math inline">\(\mu_j\)</span> is a non-standardised <span class="math inline">\(t\)</span>-distribution:</p>
-<p><span class="math display">\[\mu_j \mid \mathbf{y}_j \;\sim\;
-  t_{\nu_{nj}}\!\!\left(\mu_{nj},\;
-  \frac{\sigma_{nj}}{\sqrt{\kappa_{nj}}}\right).\]</span></p>
-<p>Under the vague prior (<span class="math inline">\(\kappa_{0j} =
-\nu_{0j} = 0\)</span>), this simplifies to</p>
-<p><span class="math display">\[\mu_j \mid \mathbf{y}_j \;\sim\;
-  t_{n_j - 1}\!\!\left(\bar{y}_j,\;
-  \frac{s_j}{\sqrt{n_j}}\right).\]</span></p>
+<div id="prior-distributions-and-external-data" class="section level2">
+<h2>Prior distributions and external data</h2>
+<p>An informative Normal-Inverse-chi-squared prior is given by its
+parameters; for example, a control prior centered at 0 with the weight
+of 2 subjects for the mean and 4 degrees of freedom for the
+variance:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>des_nix <span class="ot">&lt;-</span> <span class="fu">design_continuous</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>, <span class="at">prior_t =</span> <span class="fu">prior_vague</span>(),</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">prior_c =</span> <span class="fu">prior_nix</span>(<span class="at">mu0 =</span> <span class="dv">0</span>, <span class="at">kappa0 =</span> <span class="dv">2</span>, <span class="at">nu0 =</span> <span class="dv">4</span>, <span class="at">sigma0 =</span> <span class="dv">25</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">criterion =</span> crit</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">qdm_decide</span>(des_nix, <span class="at">data_t =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">22</span>, <span class="dv">25</span>),</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>           <span class="at">data_c =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">2</span>, <span class="dv">25</span>))<span class="sc">$</span>posterior_c</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;        mu     kappa        nu     sigma </span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  1.714286 14.000000 16.000000 24.214997</span></span></code></pre></div>
+<p>External data enter through a power prior with weight <span class="math inline">\(a_0\)</span>: data with <span class="math inline">\(n_e\)</span> subjects, mean <span class="math inline">\(\bar y_e\)</span> and standard deviation <span class="math inline">\(s_e\)</span> act as <span class="math inline">\(a_0 n_e\)</span> subjects with the same mean and
+the sum of squares <span class="math inline">\(a_0 (n_e - 1)
+s_e^2\)</span>, which keeps the posterior distribution in closed form
+(Huang et al., submitted). With the vague prior, the posterior
+distribution of the mean then has <span class="math inline">\(a_0 n_e +
+n - 1\)</span> degrees of freedom. Borrowing half of 30 external control
+subjects:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>des_ext <span class="ot">&lt;-</span> <span class="fu">design_continuous</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>, <span class="at">prior_t =</span> <span class="fu">prior_vague</span>(), <span class="at">prior_c =</span> <span class="fu">prior_vague</span>(),</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">criterion =</span> crit,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">external_c =</span> <span class="fu">borrow</span>(<span class="fu">data_continuous</span>(<span class="at">n =</span> <span class="dv">30</span>, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">25</span>), <span class="at">a0 =</span> <span class="fl">0.5</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>dec_ext <span class="ot">&lt;-</span> <span class="fu">qdm_decide</span>(des_ext, <span class="at">data_t =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">22</span>, <span class="dv">25</span>),</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>                      <span class="at">data_c =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">2</span>, <span class="dv">25</span>))</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>dec_ext<span class="sc">$</span>posterior_c</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;         mu      kappa         nu      sigma </span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;  0.8888889 27.0000000 26.0000000 24.7791527</span></span></code></pre></div>
+<p>The control mean now has 26 degrees of freedom (<span class="math inline">\(0.5 \times 30 + 12 - 1\)</span>), and the
+probability of the Go region is 0.75 (without the external data,
+0.678).</p>
 </div>
-<div id="posterior-of-the-treatment-effect" class="section level3">
-<h3>1.3 Posterior of the Treatment Effect</h3>
-<p>The treatment effect is <span class="math inline">\(\theta = \mu_t -
-\mu_c\)</span>. Since the two groups are independent, the posterior of
-<span class="math inline">\(\theta\)</span> is the distribution of the
-difference of two independent non-standardised <span class="math inline">\(t\)</span>-variables:</p>
-<p><span class="math display">\[T_j \;\sim\; t_{\nu_{nj}}(\mu_{nj},\,
-\sigma_{nj}^{\dagger}), \qquad
-  j = t, c,\]</span></p>
-<p>where the posterior scale is <span class="math inline">\(\sigma_{nj}^{\dagger} = \sigma_{nj} /
-\sqrt{\kappa_{nj}}\)</span>.</p>
-<p>The posterior probability that <span class="math inline">\(\theta\)</span> exceeds a threshold <span class="math inline">\(\theta_0\)</span>,</p>
-<p><span class="math display">\[P(\theta &gt; \theta_0 \mid \mathbf{y})
-=
-  P(T_t - T_c &gt; \theta_0),\]</span></p>
-<p>is computed by one of three methods described in Section 3.</p>
-<hr />
+<div id="hypothetical-control" class="section level2">
+<h2>Hypothetical control</h2>
+<p>For an uncontrolled study, Kang, Yamaguchi and Han (2026, Section
+4.2.4) give the control mean the same t distribution as the posterior
+distribution of the treatment mean, with location <span class="math inline">\(\mu_{0c}\)</span> and the squared scale multiplied
+by <span class="math inline">\(r\)</span>: <span class="math display">\[\mu_c \sim t_{\nu_{nt}}(\mu_{0c}, \; r
+\sigma_{nt}^2 / \kappa_{nt}).\]</span> The prior of the control group is
+then not used and is left <code>NULL</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>des_hyp <span class="ot">&lt;-</span> <span class="fu">design_continuous</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">0</span>, <span class="at">prior_t =</span> <span class="fu">prior_vague</span>(), <span class="at">criterion =</span> crit,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">hypothetical_c =</span> <span class="fu">hypothetical</span>(<span class="at">mean =</span> <span class="dv">0</span>, <span class="at">r =</span> <span class="dv">1</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">qdm_decide</span>(des_hyp, <span class="at">data_t =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">22</span>, <span class="dv">25</span>))</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 15 | data) = 0.7403 (threshold 0.6, met)</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 5 | data) = 0.06372 (threshold 0.7, not met)</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;   Treatment: mean ~ t(df = 11, location = 22, scale = 7.217)</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;   Control:   mean ~ t(df = 11, location = 0, scale = 7.217)</span></span></code></pre></div>
 </div>
+<div id="fixed-control" class="section level2">
+<h2>Fixed control</h2>
+<p>With <code>fixed_c</code>, the control mean is a known value <span class="math inline">\(\mu_{c0}\)</span>, for example the mean of the
+standard of care reported in the literature. The effect is <span class="math inline">\(\theta = \mu_t - \mu_{c0}\)</span>, its
+probabilities are those of the t distribution of the treatment mean, and
+<code>prior_c</code> and <code>method</code> are not used. With the
+vague prior and a benchmark of <span class="math inline">\(-10\)</span>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>des_fix <span class="ot">&lt;-</span> <span class="fu">design_continuous</span>(<span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">0</span>, <span class="at">prior_t =</span> <span class="fu">prior_vague</span>(),</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>                             <span class="at">criterion =</span> crit, <span class="at">fixed_c =</span> <span class="sc">-</span><span class="dv">10</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>dec_fix <span class="ot">&lt;-</span> <span class="fu">qdm_decide</span>(des_fix, <span class="at">data_t =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">22</span>, <span class="dv">25</span>))</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>dec_fix</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 15 | data) = 0.9809 (threshold 0.6, met)</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 5 | data) = 0.00163 (threshold 0.7, not met)</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;   Treatment: mean ~ t(df = 11, location = 22, scale = 7.217)</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;   Control:   fixed value -10</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="fu">pt</span>((<span class="dv">22</span> <span class="sc">-</span> (<span class="sc">-</span><span class="dv">10</span> <span class="sc">+</span> <span class="dv">15</span>)) <span class="sc">/</span> (<span class="dv">25</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">12</span>)), <span class="at">df =</span> <span class="dv">11</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [1] 0.9809453</span></span></code></pre></div>
+<p>For the predictive criterion, the mean of the <span class="math inline">\(m_t\)</span> future subjects has the predictive t
+distribution given above, and the future effect is that mean minus <span class="math inline">\(\mu_{c0}\)</span>.</p>
 </div>
-<div id="posterior-predictive-probability" class="section level2">
-<h2>2. Posterior Predictive Probability</h2>
-<div id="predictive-distribution" class="section level3">
-<h3>2.1 Predictive Distribution</h3>
-<p>Let <span class="math inline">\(\bar{\tilde{y}}_j\)</span> denote the
-future sample mean based on <span class="math inline">\(m_j\)</span>
-future patients. Under the N-Inv-<span class="math inline">\(\chi^2\)</span> posterior, the predictive
-distribution of <span class="math inline">\(\bar{\tilde{y}}_j\)</span>
-is again a non-standardised <span class="math inline">\(t\)</span>-distribution:</p>
-<p><span class="math display">\[\bar{\tilde{y}}_j \mid \mathbf{y}_j
-\;\sim\;
-  t_{\nu_{nj}}\!\!\left(\mu_{nj},\;
-  \sigma_{nj}\sqrt{\frac{1 + \kappa_{nj}}{\kappa_{nj}\,
-m_j}}\right).\]</span></p>
-<p>Under the vague prior (<span class="math inline">\(\kappa_{nj} =
-n_j\)</span>, <span class="math inline">\(\sigma_{nj} = s_j\)</span>)
-this becomes</p>
-<p><span class="math display">\[\bar{\tilde{y}}_j \mid \mathbf{y}_j
-\;\sim\;
-  t_{n_j - 1}\!\!\left(\bar{y}_j,\;
-  s_j\sqrt{\frac{n_j + 1}{n_j\, m_j}}\right).\]</span></p>
-</div>
-<div id="posterior-predictive-probability-1" class="section level3">
-<h3>2.2 Posterior Predictive Probability</h3>
-<p>The posterior predictive probability that the future treatment effect
-exceeds the null threshold <span class="math inline">\(\theta_{\mathrm{NULL}}\)</span> is</p>
-<p><span class="math display">\[P\!\left(\bar{\tilde{y}}_t -
-\bar{\tilde{y}}_c &gt; \theta_{\mathrm{NULL}}
-  \mid \mathbf{y}\right),\]</span></p>
-<p>computed by the same three methods as the posterior probability but
-with the predictive scale replacing the posterior scale.</p>
-<hr />
-</div>
-</div>
-<div id="three-computation-methods" class="section level2">
-<h2>3. Three Computation Methods</h2>
-<div id="numerical-integration-ni" class="section level3">
-<h3>3.1 Numerical Integration (NI)</h3>
-<p>The exact CDF of <span class="math inline">\(D = T_t - T_c\)</span>
-is expressed as a one-dimensional integral:</p>
-<p><span class="math display">\[P(D \le \theta_0) =
-  \int_{-\infty}^{\infty}
-  F_{t_{\nu_c}(\mu_c, \sigma_c)}\!\left(t - \theta_0\right)\,
-  f_{t_{\nu_t}(\mu_t, \sigma_t)}(t)\; dt,\]</span></p>
-<p>where <span class="math inline">\(F_{t_\nu(\mu,\sigma)}\)</span> and
-<span class="math inline">\(f_{t_\nu(\mu,\sigma)}\)</span> are the CDF
-and PDF of the non-standardised <span class="math inline">\(t\)</span>-distribution respectively. This
-integral is evaluated by <code>stats::integrate()</code> (adaptive
-Gauss-Kronrod quadrature) in <code>ptdiff_NI()</code>. The method is
-exact but evaluates the integral once per call and is therefore slow for
-large-scale simulation.</p>
-</div>
-<div id="monte-carlo-simulation-mc" class="section level3">
-<h3>3.2 Monte Carlo Simulation (MC)</h3>
-<p><span class="math inline">\(n_{\mathrm{MC}}\)</span> independent
-samples are drawn from each marginal:</p>
-<p><span class="math display">\[T_t^{(i)} \;\sim\; t_{\nu_t}(\mu_t,
-\sigma_t), \quad
-  T_c^{(i)} \;\sim\; t_{\nu_c}(\mu_c, \sigma_c), \quad
-  i = 1, \ldots, n_{\mathrm{MC}},\]</span></p>
-<p>and the probability is estimated as</p>
-<p><span class="math display">\[\widehat{P}(D &gt; \theta_0) =
-  \frac{1}{n_{\mathrm{MC}}}
-  \sum_{i=1}^{n_{\mathrm{MC}}}
-  \mathbf{1}\!\left[T_t^{(i)} - T_c^{(i)} &gt;
-\theta_0\right].\]</span></p>
-<p>When called from <code>pbayesdecisionprob1cont()</code> with <span class="math inline">\(n_{\mathrm{sim}}\)</span> simulation replicates,
-all draws are generated as a single <span class="math inline">\(n_{\mathrm{MC}} \times n_{\mathrm{sim}}\)</span>
-matrix to avoid loop overhead.</p>
-</div>
-<div id="moment-matching-approximation-mm" class="section level3">
-<h3>3.3 Moment-Matching Approximation (MM)</h3>
-<p>The difference <span class="math inline">\(D = T_t - T_c\)</span> is
-approximated by a single non-standardised <span class="math inline">\(t\)</span>-distribution (Yamaguchi et al., 2025,
-Theorem 1). Let</p>
-<p><span class="math display">\[Q^*_u =
-\left(\sigma_t^2\,\frac{\nu_t}{\nu_t - 2} +
-  \sigma_c^2\,\frac{\nu_c}{\nu_c - 2}\right)^{\!2},\]</span></p>
-<p><span class="math display">\[Q_u =
-\frac{(\sigma_t^2)^2\,\nu_t^2}{(\nu_t-2)(\nu_t-4)} +
-  \frac{(\sigma_c^2)^2\,\nu_c^2}{(\nu_c-2)(\nu_c-4)} +
-  2\left(\sigma_t^2\,\frac{\nu_t}{\nu_t-2}\right)
-   \!\left(\sigma_c^2\,\frac{\nu_c}{\nu_c-2}\right)
-  \qquad (\nu_t &gt; 4,\; \nu_c &gt; 4).\]</span></p>
-<p>Then <span class="math inline">\(D \approx Z^* \sim t_{\nu^*}(\mu^*,
-\sigma^*)\)</span>, where</p>
-<p><span class="math display">\[\mu^* = \mu_t - \mu_c,\]</span></p>
-<p><span class="math display">\[\nu^* = \frac{2Q^*_u - 4Q_u}{Q^*_u -
-Q_u},\]</span></p>
-<p><span class="math display">\[\sigma^* =
-\sqrt{\left(\sigma_t^2\,\frac{\nu_t}{\nu_t - 2} +
-  \sigma_c^2\,\frac{\nu_c}{\nu_c - 2}\right)
-  \frac{\nu^* - 2}{\nu^*}}.\]</span></p>
-<p>The CDF is evaluated via a single call to <code>stats::pt()</code>.
-This method requires <span class="math inline">\(\nu_j &gt; 4\)</span>,
-is exact in the normal limit (<span class="math inline">\(\nu_j \to
-\infty\)</span>), and is fully vectorised — making it the recommended
-method for large-scale simulation.</p>
-</div>
-<div id="comparison-of-the-three-methods" class="section level3">
-<h3>3.4 Comparison of the Three Methods</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Observed data (nMC excluded from base list; passed individually per method)</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>args_base <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">theta0 =</span> <span class="fl">1.0</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">bar_y_c =</span> <span class="fl">1.1</span>, <span class="at">s_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span></span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>)</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>p_ni <span class="ot">&lt;-</span> <span class="fu">do.call</span>(pbayespostpred1cont,</span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>                <span class="fu">c</span>(args_base, <span class="fu">list</span>(<span class="at">CalcMethod =</span> <span class="st">&#39;NI&#39;</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>)))</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>p_mm <span class="ot">&lt;-</span> <span class="fu">do.call</span>(pbayespostpred1cont,</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>                <span class="fu">c</span>(args_base, <span class="fu">list</span>(<span class="at">CalcMethod =</span> <span class="st">&#39;MM&#39;</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>)))</span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>p_mc <span class="ot">&lt;-</span> <span class="fu">do.call</span>(pbayespostpred1cont,</span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>                <span class="fu">c</span>(args_base, <span class="fu">list</span>(<span class="at">CalcMethod =</span> <span class="st">&#39;MC&#39;</span>, <span class="at">nMC =</span> <span class="dv">10000</span><span class="dt">L</span>)))</span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;NI : %.6f  (exact)</span><span class="sc">\n</span><span class="st">&quot;</span>,      p_ni))</span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a><span class="co">#&gt; NI : 0.069397  (exact)</span></span>
-<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;MM : %.6f  (approx)</span><span class="sc">\n</span><span class="st">&quot;</span>,     p_mm))</span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt; MM : 0.069397  (approx)</span></span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;MC : %.6f  (n_MC=10000)</span><span class="sc">\n</span><span class="st">&quot;</span>, p_mc))</span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt; MC : 0.073400  (n_MC=10000)</span></span></code></pre></div>
-<hr />
-</div>
-</div>
-<div id="study-designs" class="section level2">
-<h2>4. Study Designs</h2>
-<div id="controlled-design" class="section level3">
-<h3>4.1 Controlled Design</h3>
-<p>Standard parallel-group RCT with observed data from both treatment
-(<span class="math inline">\(n_t\)</span>, <span class="math inline">\(\bar{y}_t\)</span>, <span class="math inline">\(s_t\)</span>) and control (<span class="math inline">\(n_c\)</span>, <span class="math inline">\(\bar{y}_c\)</span>, <span class="math inline">\(s_c\)</span>) groups. Both posteriors are updated
-from the PoC data.</p>
-<p>Vague prior — posterior probability:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># P(mu_t - mu_c &gt; theta_TV | data) and P(mu_t - mu_c &lt;= theta_MAV | data)</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>p_tv <span class="ot">&lt;-</span> <span class="fu">pbayespostpred1cont</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;NI&#39;</span>, <span class="at">theta0 =</span> <span class="fl">1.5</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">bar_y_c =</span> <span class="fl">1.1</span>, <span class="at">s_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>)</span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>p_mav <span class="ot">&lt;-</span> <span class="fu">pbayespostpred1cont</span>(</span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;NI&#39;</span>, <span class="at">theta0 =</span> <span class="fl">0.5</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>,</span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>  <span class="at">bar_y_c =</span> <span class="fl">1.1</span>, <span class="at">s_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>)</span>
-<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a></span>
-<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;P(theta &gt; theta_TV  | data) = %.4f  -&gt; Go  criterion: &gt;= 0.80? %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>            p_tv, <span class="fu">ifelse</span>(p_tv <span class="sc">&gt;=</span> <span class="fl">0.80</span>, <span class="st">&quot;YES&quot;</span>, <span class="st">&quot;NO&quot;</span>)))</span>
-<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; P(theta &gt; theta_TV  | data) = 0.7940  -&gt; Go  criterion: &gt;= 0.80? NO</span></span>
-<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;P(theta &lt;= theta_MAV | data) = %.4f  -&gt; NoGo criterion: &gt;= 0.20? %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
-<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a>            <span class="dv">1</span> <span class="sc">-</span> p_mav, <span class="fu">ifelse</span>((<span class="dv">1</span> <span class="sc">-</span> p_mav) <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;YES&quot;</span>, <span class="st">&quot;NO&quot;</span>)))</span>
-<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt; P(theta &lt;= theta_MAV | data) = 0.0178  -&gt; NoGo criterion: &gt;= 0.20? NO</span></span>
-<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Decision: %s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
-<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a>            <span class="fu">ifelse</span>(p_tv <span class="sc">&gt;=</span> <span class="fl">0.80</span> <span class="sc">&amp;</span> (<span class="dv">1</span> <span class="sc">-</span> p_mav) <span class="sc">&lt;</span> <span class="fl">0.20</span>, <span class="st">&quot;Go&quot;</span>,</span>
-<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a>                   <span class="fu">ifelse</span>(p_tv <span class="sc">&lt;</span> <span class="fl">0.80</span> <span class="sc">&amp;</span> (<span class="dv">1</span> <span class="sc">-</span> p_mav) <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;NoGo&quot;</span>,</span>
-<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a>                          <span class="fu">ifelse</span>(p_tv <span class="sc">&gt;=</span> <span class="fl">0.80</span> <span class="sc">&amp;</span> (<span class="dv">1</span> <span class="sc">-</span> p_mav) <span class="sc">&gt;=</span> <span class="fl">0.20</span>, <span class="st">&quot;Miss&quot;</span>, <span class="st">&quot;Gray&quot;</span>)))))</span>
-<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="co">#&gt; Decision: Gray</span></span></code></pre></div>
-<p>N-Inv-<span class="math inline">\(\chi^2\)</span> informative
-prior:</p>
-<p>Historical knowledge suggests treatment mean <span class="math inline">\(\sim 3.0\)</span> and control mean <span class="math inline">\(\sim 1.0\)</span> with prior pseudo-sample size
-<span class="math inline">\(\kappa_{0t} = \kappa_{0c} = 5\)</span>
-(<code>kappa0_t</code>, <code>kappa0_c</code>) and degrees of freedom
-<span class="math inline">\(\nu_{0t} = \nu_{0c} = 5\)</span>
-(<code>nu0_t</code>, <code>nu0_c</code>).</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>p_tv_inf <span class="ot">&lt;-</span> <span class="fu">pbayespostpred1cont</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;N-Inv-Chisq&#39;</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;NI&#39;</span>, <span class="at">theta0 =</span> <span class="fl">1.5</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">bar_y_c =</span> <span class="fl">1.1</span>, <span class="at">s_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="dv">5</span>, <span class="at">kappa0_c =</span> <span class="dv">5</span>,</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">nu0_t    =</span> <span class="dv">5</span>, <span class="at">nu0_c    =</span> <span class="dv">5</span>,</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">mu0_t    =</span> <span class="fl">3.0</span>, <span class="at">mu0_c  =</span> <span class="fl">1.0</span>,</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">sigma0_t =</span> <span class="fl">2.0</span>, <span class="at">sigma0_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>)</span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;P(theta &gt; theta_TV | data, N-Inv-Chisq prior) = %.4f</span><span class="sc">\n</span><span class="st">&quot;</span>, p_tv_inf))</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; P(theta &gt; theta_TV | data, N-Inv-Chisq prior) = 0.8274</span></span></code></pre></div>
-<p>Posterior predictive probability (future Phase III: <span class="math inline">\(m_t = m_c = 60\)</span>):</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>p_pred <span class="ot">&lt;-</span> <span class="fu">pbayespostpred1cont</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;predictive&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;NI&#39;</span>, <span class="at">theta0 =</span> <span class="fl">1.0</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>, <span class="at">m_t =</span> <span class="dv">60</span>, <span class="at">m_c =</span> <span class="dv">60</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">bar_y_c =</span> <span class="fl">1.1</span>, <span class="at">s_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>)</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Predictive probability (m_t = m_c = 60) = %.4f</span><span class="sc">\n</span><span class="st">&quot;</span>, p_pred))</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; Predictive probability (m_t = m_c = 60) = 0.9966</span></span></code></pre></div>
-</div>
-<div id="uncontrolled-design-single-arm" class="section level3">
-<h3>4.2 Uncontrolled Design (Single-Arm)</h3>
-<p>When no concurrent control group is enrolled, the control
-distribution is specified from external knowledge:</p>
-<ul>
-<li>Hypothetical control mean: <span class="math inline">\(\mu_{0c}\)</span> (<code>mu0_c</code>, fixed
-scalar)</li>
-<li>Variance scaling: <span class="math inline">\(\sigma_c = \sqrt{r}
-\cdot \sigma_t\)</span>, so <span class="math inline">\(r = 1\)</span>
-assumes equal variances</li>
-</ul>
-<p>The posterior of the control mean is not updated from observed data;
-only the treatment posterior is updated.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>p_unctrl <span class="ot">&lt;-</span> <span class="fu">pbayespostpred1cont</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;uncontrolled&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;MM&#39;</span>, <span class="at">theta0 =</span> <span class="fl">1.5</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">bar_y_c =</span> <span class="cn">NULL</span>, <span class="at">s_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="fl">1.0</span>,   <span class="co"># hypothetical control mean</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="at">r =</span> <span class="fl">1.0</span>,                     <span class="co"># equal variance assumption</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>)</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;P(theta &gt; theta_TV | data, uncontrolled) = %.4f</span><span class="sc">\n</span><span class="st">&quot;</span>, p_unctrl))</span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; P(theta &gt; theta_TV | data, uncontrolled) = 0.8184</span></span></code></pre></div>
-</div>
-<div id="external-design-power-prior" class="section level3">
-<h3>4.3 External Design (Power Prior)</h3>
-<p>In the external design, historical data from a prior study are
-incorporated via a power prior with borrowing weight <span class="math inline">\(\alpha_{0e} \in (0, 1]\)</span>. The two prior
-specifications yield different posterior update formulae.</p>
-<div id="vague-prior-prior-vague" class="section level4">
-<h4>Vague prior (<code>prior = &#39;vague&#39;</code>)</h4>
-<p>For group <span class="math inline">\(j\)</span> with <span class="math inline">\(n_{e,j}\)</span> external patients, external mean
-<span class="math inline">\(\bar{y}_{e,j}\)</span>, and external SD
-<span class="math inline">\(s_{e,j}\)</span>, the posterior parameters
-after combining the power prior with the PoC data are given by Theorem 4
-of Huang et al. (2025):</p>
-<p><span class="math display">\[\mu_{nj}^* = \frac{\alpha_{0e,j}\,
-n_{e,j}\, \bar{y}_{e,j} + n_j\, \bar{y}_j}
-  {\alpha_{0e,j}\, n_{e,j} + n_j},\]</span></p>
-<p><span class="math display">\[\kappa_{nj}^* = \alpha_{0e,j}\, n_{e,j}
-+ n_j,\]</span></p>
-<p><span class="math display">\[\nu_{nj}^* = \alpha_{0e,j}\, n_{e,j} +
-n_j - 1,\]</span></p>
-<p><span class="math display">\[(\sigma_{nj}^*)^2 =
-\frac{\alpha_{0e,j}(n_{e,j}-1)\, s_{e,j}^2 +
-  (n_j-1)\, s_j^2 +
-  \dfrac{\alpha_{0e,j}\, n_{e,j}\, n_j\, (\bar{y}_{e,j} - \bar{y}_j)^2}
-        {\alpha_{0e,j}\, n_{e,j} + n_j}}
-  {\alpha_{0e,j}\, n_{e,j} + n_j}.\]</span></p>
-<p>The marginal posterior of <span class="math inline">\(\mu_j\)</span>
-is then</p>
-<p><span class="math display">\[\mu_j \mid \mathbf{y}_j \;\sim\;
-  t_{\nu_{nj}^*}\!\!\left(\mu_{nj}^*,\;
-  \frac{\sigma_{nj}^*}{\sqrt{\kappa_{nj}^*}}\right).\]</span></p>
-<p>Setting <span class="math inline">\(\alpha_{0e,j} = 1\)</span>
-corresponds to full borrowing; as <span class="math inline">\(\alpha_{0e,j} \to 0\)</span> the result recovers
-the vague-prior posterior from the current data alone.</p>
-</div>
-<div id="n-inv-chi2-prior-prior-n-inv-chisq" class="section level4">
-<h4>N-Inv-<span class="math inline">\(\chi^2\)</span> prior
-(<code>prior = &#39;N-Inv-Chisq&#39;</code>)</h4>
-<p>When an informative N-Inv-<span class="math inline">\(\chi^2(\mu_{0j}, \kappa_{0j}, \nu_{0j},
-\sigma_{0j}^2)\)</span> initial prior is specified, the power prior is
-first formed by combining the initial prior with the discounted external
-data (Theorem 1 of Huang et al., 2025):</p>
-<p><span class="math display">\[\mu_{e,j} = \frac{\alpha_{0e,j}\,
-n_{e,j}\, \bar{y}_{e,j} + \kappa_{0j}\, \mu_{0j}}
-  {\alpha_{0e,j}\, n_{e,j} + \kappa_{0j}},\]</span></p>
-<p><span class="math display">\[\kappa_{e,j} = \alpha_{0e,j}\, n_{e,j} +
-\kappa_{0j},\]</span></p>
-<p><span class="math display">\[\nu_{e,j} = \alpha_{0e,j}\, n_{e,j} +
-\nu_{0j},\]</span></p>
-<p><span class="math display">\[\sigma_{e,j}^2 =
-\frac{\alpha_{0e,j}(n_{e,j}-1)\, s_{e,j}^2 +
-  \nu_{0j}\, \sigma_{0j}^2 +
-  \dfrac{\alpha_{0e,j}\, n_{e,j}\, \kappa_{0j}\, (\bar{y}_{e,j} -
-\mu_{0j})^2}
-        {\alpha_{0e,j}\, n_{e,j} + \kappa_{0j}}}
-  {\nu_{e,j}}.\]</span></p>
-<p>This intermediate result is then updated with the PoC data by
-standard conjugate updating (Theorem 2 of Huang et al., 2025):</p>
-<p><span class="math display">\[\mu_{nj}^* = \frac{\kappa_{e,j}\,
-\mu_{e,j} + n_j\, \bar{y}_j}
-  {\kappa_{e,j} + n_j},\]</span></p>
-<p><span class="math display">\[\kappa_{nj}^* = \kappa_{e,j} +
-n_j,\]</span></p>
-<p><span class="math display">\[\nu_{nj}^* = \nu_{e,j} +
-n_j,\]</span></p>
-<p><span class="math display">\[(\sigma_{nj}^*)^2 = \frac{\nu_{e,j}\,
-\sigma_{e,j}^2 + (n_j-1)\, s_j^2 +
-  \dfrac{n_j\, \kappa_{e,j}\, (\mu_{e,j} - \bar{y}_j)^2}
-        {\kappa_{e,j} + n_j}}
-  {\nu_{nj}^*}.\]</span></p>
-<p>The marginal posterior of <span class="math inline">\(\mu_j\)</span>
-is then</p>
-<p><span class="math display">\[\mu_j \mid \mathbf{y}_j \;\sim\;
-  t_{\nu_{nj}^*}\!\!\left(\mu_{nj}^*,\;
-  \frac{\sigma_{nj}^*}{\sqrt{\kappa_{nj}^*}}\right).\]</span></p>
-</div>
-<div id="example-external-control-design-vague-prior" class="section level4">
-<h4>Example: external control design, vague prior</h4>
-<p>Here, <span class="math inline">\(n_{e,c} = 20\)</span>
-(<code>ne_c</code>), <span class="math inline">\(\bar{y}_{e,c} =
-0.9\)</span> (<code>bar_ye_c</code>), <span class="math inline">\(s_{e,c} = 1.8\)</span> (<code>se_c</code>), <span class="math inline">\(\alpha_{0e,c} = 0.5\)</span>
-(<code>alpha0e_c</code>) (50% borrowing from external control):</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>p_ext <span class="ot">&lt;-</span> <span class="fu">pbayespostpred1cont</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;external&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;MM&#39;</span>, <span class="at">theta0 =</span> <span class="fl">1.5</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">bar_y_c =</span> <span class="fl">1.1</span>, <span class="at">s_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="fl">0.5</span>,</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="fl">0.9</span>, <span class="at">se_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>)</span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;P(theta &gt; theta_TV | data, external control design, alpha=0.5) = %.4f</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>            p_ext))</span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; P(theta &gt; theta_TV | data, external control design, alpha=0.5) = 0.8517</span></span></code></pre></div>
-<p>Effect of the borrowing weight: varying <span class="math inline">\(\alpha_{0e,c}\)</span> from 0 to 1 shows how
-external data influence the posterior.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># alpha0e_c must be in (0, 1]; start from 0.01 to avoid validation error</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>alpha_seq <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="fl">1.0</span>, <span class="at">by =</span> <span class="fl">0.1</span>))</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>p_alpha   <span class="ot">&lt;-</span> <span class="fu">sapply</span>(alpha_seq, <span class="cf">function</span>(a) {</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">pbayespostpred1cont</span>(</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>    <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;external&#39;</span>, <span class="at">prior =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>    <span class="at">CalcMethod =</span> <span class="st">&#39;MM&#39;</span>, <span class="at">theta0 =</span> <span class="fl">1.5</span>, <span class="at">nMC =</span> <span class="cn">NULL</span>,</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>    <span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>,</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>    <span class="at">bar_y_t =</span> <span class="fl">3.2</span>, <span class="at">s_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    <span class="at">bar_y_c =</span> <span class="fl">1.1</span>, <span class="at">s_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>    <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>    <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>    <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>    <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>    <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="dv">20</span><span class="dt">L</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> a,</span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>    <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="fl">0.9</span>, <span class="at">se_c =</span> <span class="fl">1.8</span>,</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>    <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  )</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>})</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">alpha_ec =</span> alpha_seq, <span class="at">P_gt_TV =</span> <span class="fu">round</span>(p_alpha, <span class="dv">4</span>))</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;    alpha_ec P_gt_TV</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 1      0.01  0.7994</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; 2      0.10  0.8133</span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; 3      0.20  0.8259</span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; 4      0.30  0.8361</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; 5      0.40  0.8446</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; 6      0.50  0.8517</span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; 7      0.60  0.8577</span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; 8      0.70  0.8629</span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; 9      0.80  0.8674</span></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; 10     0.90  0.8713</span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; 11     1.00  0.8748</span></span></code></pre></div>
-<hr />
-</div>
-</div>
+<div id="predictive-criterion" class="section level2">
+<h2>Predictive criterion</h2>
+<p>With 50 subjects per group in a future study and <span class="math inline">\(\theta_{NULL} = 0\)</span>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>des_pred <span class="ot">&lt;-</span> <span class="fu">design_continuous</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>, <span class="at">prior_t =</span> <span class="fu">prior_vague</span>(), <span class="at">prior_c =</span> <span class="fu">prior_vague</span>(),</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">criterion_predictive</span>(<span class="at">theta_null =</span> <span class="dv">0</span>, <span class="at">m_t =</span> <span class="dv">50</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>                                   <span class="at">gamma_go =</span> <span class="fl">0.9</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.7</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">qdm_decide</span>(des_pred, <span class="at">data_t =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">22</span>, <span class="dv">25</span>),</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>           <span class="at">data_c =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">2</span>, <span class="dv">25</span>))</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;   Go:   P(future theta &gt; 0 | data) = 0.9457 (threshold 0.9, met)</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(future theta &lt;= 0 | data) = 0.05428 (threshold 0.7, not met)</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;   Treatment: mean ~ t(df = 11, location = 22, scale = 7.217)</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;   Control:   mean ~ t(df = 11, location = 2, scale = 7.217)</span></span></code></pre></div>
 </div>
 <div id="operating-characteristics" class="section level2">
-<h2>5. Operating Characteristics</h2>
-<div id="definition" class="section level3">
-<h3>5.1 Definition</h3>
-<p>For given true parameters <span class="math inline">\((\mu_t, \mu_c,
-\sigma_t, \sigma_c)\)</span>, the operating characteristics are the
-probabilities of each decision outcome under the Go/NoGo/Gray/Miss rule
-with thresholds <span class="math inline">\((\gamma_{\mathrm{go}},
-\gamma_{\mathrm{nogo}})\)</span>. These are estimated by Monte Carlo
-simulation over <span class="math inline">\(n_{\mathrm{sim}}\)</span>
-replicates:</p>
-<p><span class="math display">\[\widehat{\Pr}(\mathrm{Go}) =
-  \frac{1}{n_{\mathrm{sim}}} \sum_{i=1}^{n_{\mathrm{sim}}}
-  \mathbf{1}\!\left[g_{\mathrm{Go}}^{(i)} \ge \gamma_{\mathrm{go}}
-    \;\text{ and }\; g_{\mathrm{NoGo}}^{(i)} &lt;
-\gamma_{\mathrm{nogo}}\right],\]</span></p>
-<p><span class="math display">\[\widehat{\Pr}(\mathrm{NoGo}) =
-  \frac{1}{n_{\mathrm{sim}}} \sum_{i=1}^{n_{\mathrm{sim}}}
-  \mathbf{1}\!\left[g_{\mathrm{Go}}^{(i)} &lt; \gamma_{\mathrm{go}}
-    \;\text{ and }\; g_{\mathrm{NoGo}}^{(i)} \ge
-\gamma_{\mathrm{nogo}}\right],\]</span></p>
-<p><span class="math display">\[\widehat{\Pr}(\mathrm{Gray}) = 1 -
-  \widehat{\Pr}(\mathrm{Go}) - \widehat{\Pr}(\mathrm{NoGo}) -
-  \widehat{\Pr}(\mathrm{Miss}),\]</span></p>
-<p>where</p>
-<p><span class="math display">\[g_{\mathrm{Go}}^{(i)} = P(\theta &gt;
-\theta_{\mathrm{TV}} \mid \mathbf{y}^{(i)}),
-\qquad
-g_{\mathrm{NoGo}}^{(i)} = P(\theta \le \theta_{\mathrm{MAV}} \mid
-\mathbf{y}^{(i)})\]</span></p>
-<p>are evaluated for the <span class="math inline">\(i\)</span>-th
-simulated dataset <span class="math inline">\(\mathbf{y}^{(i)}\)</span>.
-A Miss (<span class="math inline">\(g_{\mathrm{Go}} \ge
-\gamma_{\mathrm{go}}\)</span> AND <span class="math inline">\(g_{\mathrm{NoGo}} \ge
-\gamma_{\mathrm{nogo}}\)</span>) indicates an inconsistent threshold
-configuration and triggers an error by default
-(<code>error_if_Miss = TRUE</code>).</p>
+<h2>Operating characteristics</h2>
+<p><code>qdm_oc()</code> simulates <code>nsim</code> studies under each
+scenario. Only the sufficient statistics are simulated, <span class="math inline">\(\bar y = \mu + \sigma Z / \sqrt{n}\)</span> and
+<span class="math inline">\(s = \sigma \sqrt{X / (n - 1)}\)</span> with
+<span class="math inline">\(Z \sim N(0, 1)\)</span> and <span class="math inline">\(X \sim \chi^2_{n - 1}\)</span>, and the same
+random numbers are used for all scenarios. The moment-matching
+approximation is much faster than numerical integration and is
+convenient for exploring designs:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>des_mm <span class="ot">&lt;-</span> <span class="fu">design_continuous</span>(<span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>, <span class="at">prior_t =</span> <span class="fu">prior_vague</span>(),</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>                            <span class="at">prior_c =</span> <span class="fu">prior_vague</span>(), <span class="at">criterion =</span> crit,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>                            <span class="at">method =</span> <span class="st">&quot;MM&quot;</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>scen <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">mu_t =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">40</span>, <span class="at">by =</span> <span class="dv">5</span>), <span class="at">sd_t =</span> <span class="dv">25</span>, <span class="at">mu_c =</span> <span class="dv">0</span>, <span class="at">sd_c =</span> <span class="dv">25</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>oc <span class="ot">&lt;-</span> <span class="fu">qdm_oc</span>(des_mm, scen, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>oc</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; Operating characteristics (simulation of 10000 studies; probabilities by moment-matching approximation)</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt;  mu_t sd_t mu_c sd_c     Go   NoGo   Gray Miss</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt;     0   25    0   25 0.0419 0.4823 0.4758    0</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt;     5   25    0   25 0.1087 0.2928 0.5985    0</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt;    10   25    0   25 0.2264 0.1533 0.6203    0</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt;    15   25    0   25 0.3876 0.0682 0.5442    0</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt;    20   25    0   25 0.5825 0.0238 0.3937    0</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt;    25   25    0   25 0.7631 0.0069 0.2300    0</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt;    30   25    0   25 0.8817 0.0014 0.1169    0</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt;    35   25    0   25 0.9508 0.0003 0.0489    0</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt;    40   25    0   25 0.9840 0.0001 0.0159    0</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="fu">plot</span>(oc)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The chosen design can be checked with numerical integration. To keep
+this vignette quick, only three scenarios and 1000 simulated studies are
+used here; with the same seed, both methods are applied to the same
+simulated studies:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>scen3 <span class="ot">&lt;-</span> scen[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">5</span>), ]</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>oc_ni <span class="ot">&lt;-</span> <span class="fu">qdm_oc</span>(des, scen3, <span class="at">nsim =</span> <span class="dv">1000</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>oc_mm <span class="ot">&lt;-</span> <span class="fu">qdm_oc</span>(des_mm, scen3, <span class="at">nsim =</span> <span class="dv">1000</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">mu_t =</span> scen3<span class="sc">$</span>mu_t, <span class="at">Go_NI =</span> oc_ni<span class="sc">$</span>Go, <span class="at">Go_MM =</span> oc_mm<span class="sc">$</span>Go,</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>           <span class="at">NoGo_NI =</span> oc_ni<span class="sc">$</span>NoGo, <span class="at">NoGo_MM =</span> oc_mm<span class="sc">$</span>NoGo)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;   mu_t Go_NI Go_MM NoGo_NI NoGo_MM</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; 1    0 0.043 0.043   0.498   0.498</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; 2   10 0.209 0.209   0.180   0.180</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; 3   20 0.575 0.576   0.027   0.027</span></span></code></pre></div>
+<p>The simulation standard error of the probabilities is at most <span class="math inline">\(0.5 / \sqrt{nsim}\)</span>, 0.005 for the default
+<code>nsim = 10000</code>.</p>
 </div>
-<div id="example-controlled-design-posterior-probability" class="section level3">
-<h3>5.2 Example: Controlled Design, Posterior Probability</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>oc_ctrl <span class="ot">&lt;-</span> <span class="fu">pbayesdecisionprob1cont</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">nsim       =</span> <span class="dv">500</span><span class="dt">L</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">prob       =</span> <span class="st">&#39;posterior&#39;</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">design     =</span> <span class="st">&#39;controlled&#39;</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">prior      =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;MM&#39;</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">theta_TV   =</span> <span class="fl">1.5</span>,  <span class="at">theta_MAV =</span> <span class="fl">0.5</span>,  <span class="at">theta_NULL =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">nMC        =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="at">gamma_go   =</span> <span class="fl">0.80</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.20</span>,</span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span>,   <span class="at">n_c =</span> <span class="dv">15</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="at">mu_t    =</span> <span class="fu">seq</span>(<span class="fl">1.0</span>, <span class="fl">4.0</span>, <span class="at">by =</span> <span class="fl">0.5</span>),</span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  <span class="at">mu_c    =</span> <span class="fl">1.0</span>,</span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>  <span class="at">sigma_t =</span> <span class="fl">2.0</span>,</span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  <span class="at">sigma_c =</span> <span class="fl">2.0</span>,</span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  <span class="at">error_if_Miss =</span> <span class="cn">TRUE</span>, <span class="at">Gray_inc_Miss =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">42</span><span class="dt">L</span></span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>)</span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="fu">print</span>(oc_ctrl)</span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; Go/NoGo/Gray Decision Probabilities (Single Continuous Endpoint) </span></span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------------------------------- </span></span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt;   Probability type : posterior </span></span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt;   Design           : controlled </span></span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt;   Prior            : vague </span></span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a><span class="co">#&gt;   Calc method      : MM </span></span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt;   Simulations      : nsim = 500 </span></span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt;   Threshold(s)     : TV = 1.5, MAV = 0.5 </span></span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="co">#&gt;   Go  threshold    : gamma_go = 0.8 </span></span>
-<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co">#&gt;   NoGo threshold   : gamma_nogo = 0.2 </span></span>
-<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a><span class="co">#&gt;   Sample size      : n_t = 15, n_c = 15 </span></span>
-<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a><span class="co">#&gt;   True SD          : sigma_t = 2, sigma_c = 2 </span></span>
-<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a><span class="co">#&gt;   Miss handling    : error_if_Miss = TRUE, Gray_inc_Miss = FALSE </span></span>
-<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co">#&gt;   Seed             : 42 </span></span>
-<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a><span class="co">#&gt; ---------------------------------------------------------------- </span></span>
-<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a><span class="co">#&gt;  mu_t mu_c    Go  Gray  NoGo</span></span>
-<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a><span class="co">#&gt;   1.0    1 0.002 0.064 0.934</span></span>
-<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a><span class="co">#&gt;   1.5    1 0.014 0.168 0.818</span></span>
-<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a><span class="co">#&gt;   2.0    1 0.066 0.352 0.582</span></span>
-<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a><span class="co">#&gt;   2.5    1 0.182 0.502 0.316</span></span>
-<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a><span class="co">#&gt;   3.0    1 0.418 0.460 0.122</span></span>
-<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a><span class="co">#&gt;   3.5    1 0.684 0.288 0.028</span></span>
-<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a><span class="co">#&gt;   4.0    1 0.878 0.118 0.004</span></span>
-<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a><span class="co">#&gt; ----------------------------------------------------------------</span></span>
-<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a><span class="fu">plot</span>(oc_ctrl, <span class="at">base_size =</span> <span class="dv">20</span>)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-<p>The same function supports <code>design = &#39;uncontrolled&#39;</code> (with
-arguments <code>mu0_c</code> and <code>r</code>),
-<code>design = &#39;external&#39;</code> (with power prior arguments
-<code>ne_c</code>, <code>alpha0e_c</code>, <code>bar_ye_c</code>,
-<code>se_c</code>), and <code>prob = &#39;predictive&#39;</code> (with future
-sample size arguments <code>m_t</code>, <code>m_c</code> and
-<code>theta_NULL</code>). The function signature and output format are
-identical across all combinations.</p>
-<hr />
+<div id="decision-boundary" class="section level2">
+<h2>Decision boundary</h2>
+<p><code>qdm_boundary()</code> shows which observed means lead to each
+decision. For each observed standard deviation (or sample size) of the
+treatment group, it gives the intervals of the observed treatment mean
+that lead to Go, NoGo and Gray decisions, and the corresponding observed
+differences in means; the ends of the intervals are located by
+bisection. With a concurrent control group, the observed control data
+are given by <code>data_c</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">qdm_boundary</span>(des_mm, <span class="at">sd_t =</span> <span class="fu">seq</span>(<span class="dv">10</span>, <span class="dv">40</span>, <span class="at">by =</span> <span class="dv">5</span>),</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>                  <span class="at">data_c =</span> <span class="fu">data_continuous</span>(<span class="dv">12</span>, <span class="dv">2</span>, <span class="dv">25</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>b</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; Decision boundary of a design with one continuous endpoint</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt;   n_t = 12</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt;   Control data: continuous, n = 12, mean = 2, sd = 25</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; Observed treatment mean</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt;   sd_t   NoGo         Gray               Go</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt;   10     &lt;= 2.747     2.747 to 19.05     &gt;= 19.05</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt;   15     &lt;= 2.352     2.352 to 19.24     &gt;= 19.24</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt;   20     &lt;= 1.866     1.866 to 19.47     &gt;= 19.47</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt;   25     &lt;= 1.321     1.321 to 19.74     &gt;= 19.74</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt;   30     &lt;= 0.7346    0.7346 to 20.02    &gt;= 20.02</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt;   35     &lt;= 0.1162    0.1162 to 20.31    &gt;= 20.31</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt;   40     &lt;= -0.5276   -0.5276 to 20.62   &gt;= 20.62</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; Observed difference in means (control mean 2)</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt;   sd_t   NoGo         Gray               Go</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt;   10     &lt;= 0.7473    0.7473 to 17.05    &gt;= 17.05</span></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt;   15     &lt;= 0.3518    0.3518 to 17.24    &gt;= 17.24</span></span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt;   20     &lt;= -0.1338   -0.1338 to 17.47   &gt;= 17.47</span></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co">#&gt;   25     &lt;= -0.6788   -0.6788 to 17.74   &gt;= 17.74</span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt;   30     &lt;= -1.265    -1.265 to 18.02    &gt;= 18.02</span></span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a><span class="co">#&gt;   35     &lt;= -1.884    -1.884 to 18.31    &gt;= 18.31</span></span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a><span class="co">#&gt;   40     &lt;= -2.528    -2.528 to 18.62    &gt;= 18.62</span></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a><span class="fu">plot</span>(b)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>With an observed standard deviation of 25, a Go decision needs an
+observed difference in means of at least 17.7, and a larger standard
+deviation needs a larger observed difference. For the design with a
+fixed control, the boundary can be shown against the sample size
+instead:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>b_fix <span class="ot">&lt;-</span> <span class="fu">qdm_boundary</span>(des_fix, <span class="at">n_t =</span> <span class="fu">c</span>(<span class="dv">6</span>, <span class="dv">12</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>), <span class="at">sd_t =</span> <span class="dv">25</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>b_fix</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co">#&gt; Decision boundary of a design with one continuous endpoint</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#&gt;   sd_t = 25</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co">#&gt; Observed treatment mean</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt;   n_t   NoGo        Gray              Go</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt;   6     &lt;= -10.71   -10.71 to 7.727   &gt;= 7.727</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt;   12    &lt;= -8.897   -8.897 to 6.873   &gt;= 6.873</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt;   20    &lt;= -7.981   -7.981 to 6.436   &gt;= 6.436</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt;   30    &lt;= -7.42    -7.42 to 6.167    &gt;= 6.167</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt;   40    &lt;= -7.09    -7.09 to 6.008    &gt;= 6.008</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt; Observed difference from the fixed control mean (-10)</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="co">#&gt;   n_t   NoGo         Gray               Go</span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="co">#&gt;   6     &lt;= -0.7097   -0.7097 to 17.73   &gt;= 17.73</span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co">#&gt;   12    &lt;= 1.103     1.103 to 16.87     &gt;= 16.87</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co">#&gt;   20    &lt;= 2.019     2.019 to 16.44     &gt;= 16.44</span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt;   30    &lt;= 2.58      2.58 to 16.17      &gt;= 16.17</span></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="co">#&gt;   40    &lt;= 2.91      2.91 to 16.01      &gt;= 16.01</span></span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="fu">plot</span>(b_fix)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAAAAGwCAMAAABB3CfxAAABrVBMVEUAAAAAADoAAGYAOmYAOpAAZrYzMzM6AAA6ADo6AGY6OmY6OpA6ZrY6kNtNTU1NTW5NTY5NbqtNjshljRtljUlljXFloXFloZdltLtmAABmADpmAGZmOgBmOpBmZmZmtrZmtv9uTU1uTW5uTY5ubo5ubqtuq+SBjRuBoZeBtLuByLuByN2OTU2OTW6OTY6Obk2OyP+QOgCQOjqQOmaQkDqQkGaQtpCQ27aQ2/+TlZecjRucoRucoUmc2/+rbk2rbm6ryKur5OSr5P+2ZgC2Zjq2oRu2tma225e22/+27f+2///Ijk3I///PtBvPtEnPyEnP7f/P///ZHknZH2vZH4vZS4vZS6nZc8fbkDrb/7bb///gH0ngS6ngc8fgmcfgmePkq27k///mH0nmS0nmS2vmmePmvOPmvP/nyEnn27vn293n///tS0ntvKnt3v/yc0nyc2vy3v/y///4mWv4vIv4vKn4vMf4vOP4////tmb/vIv/yI7/23H/25D/25f/27b/29v/3qn/3sf/5Kv/7Zf/7bv//7b//7v//8f//8j//9v//93//+P//+T///8EVNVSAAAACXBIWXMAAA7DAAAOwwHHb6hkAAASBklEQVR4nO3di3scVQGG8U1tmlZNSm/QImqwtoiFmqKU4KViV1TSoLSUsha1rReoFkGKlywhKgSjSZv5mz1n7pvM7uxkduZ8u/P+nocmDdnJNHlzZubszkzLA4S1XK8AMAiBQhqBQhqBQhqBQhqBQtoeAj0AVK9EoMeAqhEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopBEopA0d6PrpZc/bfGbuyB0CRX2GDXR17pFlb/vSgnf7KIGiPkMGeuXwS2YE3Ty/HIykBIqaFNrEr5+5420+e9nGabledzRAoUBXj0SBMoKiHnscQQkU9SgU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" /><!-- --></p>
 </div>
+<div id="calibration-of-the-thresholds" class="section level2">
+<h2>Calibration of the thresholds</h2>
+<p>The thresholds are calibrated so that the Go criterion is met with
+probability at most 0.05 when the treatment has no effect, and the NoGo
+criterion with probability at most 0.2 when the effect is 20:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>cal <span class="ot">&lt;-</span> <span class="fu">qdm_calibrate</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  des_mm,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">scenario_go =</span> <span class="fu">data.frame</span>(<span class="at">mu_t =</span> <span class="dv">0</span>, <span class="at">sd_t =</span> <span class="dv">25</span>, <span class="at">mu_c =</span> <span class="dv">0</span>, <span class="at">sd_c =</span> <span class="dv">25</span>),</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">scenario_nogo =</span> <span class="fu">data.frame</span>(<span class="at">mu_t =</span> <span class="dv">20</span>, <span class="at">sd_t =</span> <span class="dv">25</span>, <span class="at">mu_c =</span> <span class="dv">0</span>, <span class="at">sd_c =</span> <span class="dv">25</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">target_go =</span> <span class="fl">0.05</span>, <span class="at">target_nogo =</span> <span class="fl">0.2</span>, <span class="at">seed =</span> <span class="dv">1</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>)</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>cal</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; Calibration of the decision thresholds (simulation of 10000 studies; probabilities by moment-matching approximation)</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;   gamma_go   = 0.57: P(Go criterion met | scenario_go) = 0.0484 (target 0.05)</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt;   gamma_nogo = 0.28: P(NoGo criterion met | scenario_nogo) = 0.1975 (target 0.2)</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; Decision probabilities with the chosen thresholds</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;       scenario mu_t sd_t mu_c sd_c     Go   NoGo   Gray Miss</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;    scenario_go    0   25    0   25 0.0484 0.8615 0.0901    0</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt;  scenario_nogo   20   25    0   25 0.6135 0.1975 0.1890    0</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="fu">plot</span>(cal)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The chosen thresholds are <span class="math inline">\(\gamma_{go}
+=\)</span> 0.57 and <span class="math inline">\(\gamma_{nogo} =\)</span>
+0.28.</p>
 </div>
-<div id="optimal-threshold-search" class="section level2">
-<h2>6. Optimal Threshold Search</h2>
-<div id="objective" class="section level3">
-<h3>6.1 Objective</h3>
-<p>The <code>getgamma1cont()</code> function finds the optimal pair
-<span class="math inline">\((\gamma_{\mathrm{go}}^*,
-\gamma_{\mathrm{nogo}}^*)\)</span> by grid search over <span class="math inline">\(\Gamma = \{\gamma^{(1)}, \ldots, \gamma^{(K)}\}
-\subset (0, 1)\)</span>. The two thresholds are calibrated independently
-under separate scenarios:</p>
-<ul>
-<li><span class="math inline">\(\gamma_{\mathrm{go}}^*\)</span>:
-selected so that <span class="math inline">\(\Pr(\mathrm{Go} \mid
-\gamma_{\mathrm{go}}^*)\)</span> satisfies a criterion against a target
-value (e.g., <span class="math inline">\(\Pr(\mathrm{Go}) &lt;
-0.05\)</span>) under the Go-calibration scenario (<code>mu_t_go</code>,
-<code>mu_c_go</code>, <code>sigma_t_go</code>, <code>sigma_c_go</code>;
-typically the null scenario <span class="math inline">\(\mu_t =
-\mu_c\)</span>).</li>
-<li><span class="math inline">\(\gamma_{\mathrm{nogo}}^*\)</span>:
-selected so that <span class="math inline">\(\Pr(\mathrm{NoGo} \mid
-\gamma_{\mathrm{nogo}}^*)\)</span> satisfies a criterion (e.g., <span class="math inline">\(\Pr(\mathrm{NoGo}) &lt; 0.20\)</span>) under the
-NoGo-calibration scenario (<code>mu_t_nogo</code>,
-<code>mu_c_nogo</code>, <code>sigma_t_nogo</code>,
-<code>sigma_c_nogo</code>; typically the alternative scenario).</li>
-</ul>
-<p>The search uses a two-stage strategy:</p>
-<p>Stage 1 (Simulate once): <span class="math inline">\(n_{\mathrm{sim}}\)</span> datasets are generated
-from the true parameter distribution and the probabilities <span class="math inline">\(g_{\mathrm{Go}}^{(i)}\)</span> and <span class="math inline">\(g_{\mathrm{NoGo}}^{(i)}\)</span> are computed for
-each replicate — independently of <span class="math inline">\(\gamma\)</span>.</p>
-<p>Stage 2 (Sweep over <span class="math inline">\(\Gamma\)</span>): for
-each candidate <span class="math inline">\(\gamma \in \Gamma\)</span>,
-<span class="math inline">\(\Pr(\mathrm{Go} \mid \gamma)\)</span> and
-<span class="math inline">\(\Pr(\mathrm{NoGo} \mid \gamma)\)</span> are
-computed as empirical proportions over the precomputed indicator values
-without further probability evaluations.</p>
-</div>
-<div id="example-controlled-design-posterior-probability-1" class="section level3">
-<h3>6.2 Example: Controlled Design, Posterior Probability</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>res_gamma <span class="ot">&lt;-</span> <span class="fu">getgamma1cont</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">nsim       =</span> <span class="dv">1000</span><span class="dt">L</span>,</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">prob       =</span> <span class="st">&#39;posterior&#39;</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">design     =</span> <span class="st">&#39;controlled&#39;</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">prior      =</span> <span class="st">&#39;vague&#39;</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">CalcMethod =</span> <span class="st">&#39;MM&#39;</span>,</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">theta_TV   =</span> <span class="fl">1.5</span>, <span class="at">theta_MAV =</span> <span class="fl">0.5</span>, <span class="at">theta_NULL =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">nMC        =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">mu_t_go    =</span> <span class="fl">1.0</span>, <span class="at">mu_c_go    =</span> <span class="fl">1.0</span>,   <span class="co"># null scenario: no treatment effect</span></span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="at">sigma_t_go =</span> <span class="fl">2.0</span>, <span class="at">sigma_c_go =</span> <span class="fl">2.0</span>,</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="at">mu_t_nogo    =</span> <span class="fl">2.5</span>, <span class="at">mu_c_nogo    =</span> <span class="fl">1.0</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="at">sigma_t_nogo =</span> <span class="fl">2.0</span>, <span class="at">sigma_c_nogo =</span> <span class="fl">2.0</span>,</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">target_go =</span> <span class="fl">0.05</span>, <span class="at">target_nogo =</span> <span class="fl">0.20</span>,</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">15</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">15</span><span class="dt">L</span>, <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  <span class="at">kappa0_t =</span> <span class="cn">NULL</span>, <span class="at">kappa0_c =</span> <span class="cn">NULL</span>, <span class="at">nu0_t =</span> <span class="cn">NULL</span>, <span class="at">nu0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>  <span class="at">mu0_t =</span> <span class="cn">NULL</span>, <span class="at">mu0_c =</span> <span class="cn">NULL</span>, <span class="at">sigma0_t =</span> <span class="cn">NULL</span>, <span class="at">sigma0_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  <span class="at">r =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>  <span class="at">bar_ye_t =</span> <span class="cn">NULL</span>, <span class="at">bar_ye_c =</span> <span class="cn">NULL</span>, <span class="at">se_t =</span> <span class="cn">NULL</span>, <span class="at">se_c =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>  <span class="at">gamma_grid =</span> <span class="fu">seq</span>(<span class="fl">0.01</span>, <span class="fl">0.99</span>, <span class="at">by =</span> <span class="fl">0.01</span>),</span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">42</span><span class="dt">L</span></span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>)</span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="fu">plot</span>(res_gamma, <span class="at">base_size =</span> <span class="dv">20</span>)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAwAAAAJACAMAAAANcPFkAAABg1BMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYzMzM6AAA6ADo6AGY6OgA6Ojo6OmY6OpA6ZmY6ZpA6ZrY6kJA6kLY6kNtNTU1NTW5NTY5Nbm5Nbo5NbqtNjshljRtmAABmADpmAGZmOgBmOjpmOmZmOpBmZjpmZmZmZpBmZrZmkJBmkLZmkNtmtttmtv9uTU1ubk1ujshuq6tuq+SOTU2Obk2Obm6Oq8iOyOSOyP+QOgCQOjqQOmaQZjqQZmaQkGaQkLaQtraQttuQtv+Q29uQ2/+rbk2rjm6ryOSr5OSr5P+2ZgC2Zjq2kDq2kGa2kJC2kLa2tma2tpC2tra2ttu229u22/+2///Ijk3Ijm7Iq27Iq47I5P/I/+TI///ZHknbkDrbkJDbtmbbtpDbtrbb25Db27bb29vb2//b/7bb///kq27kq47kyI7kyKvk5Kvk5OTk5P/k/+Tk///r6+v/tmb/tpD/yI7/25D/27b/29v/5Kv/5Mj/5OT//7b//8j//9v//+T///8yWZ/vAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAgAElEQVR4nO2dj5vc1nmdPzq2tK2pxG41lCmRjlVbjuVo7WgZU0rTNG61UbSK3NiJTTWOyNqtlWpDpqnIcqN19sf86R1gdnYAzP0GuMA999wlz/s8CTXg7NnXH3AGwAAztLkQzzHGFhCCibEFhGBibAEhmBhbQAgmxhYQgomxBYRgYiN+5vCVT5oPH92ZzW6+n0ZHiLxY/I88nLUKcDireTuVkRAZsdgfOP/vs1YBjndnd6tS3PggoZUQmbDI5x/fmd280yzA4fK1/1C7AHEVscjn37vxo/+73yjA+f7ypf9499XPE2oJkQeLfP7/+XyxzbcKsHxwurda+GJNIj0hsFj8j7QKcLq3fOVfL1wWwB4LUSToAixjR+Ri6P4Pfh4NpOBj8T+iAlw1Ayn4WPyP9JwDLGNH5GLgD55vIAUfi/+R8wHvAqkAJRlIwcfif6R9tBO+DqAClGQgBR+L/5F2AcJXglWAkgyk4GPxP7I+7K83+uC9QCpASQZS8LH4H+kUIHg3qApQkoEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwUC8qNhz94voEUfAwU28q9f/8+5tcMgD94voEUfAwU28y9rwJIoQCFIAaKbeaqAGyk4GKg2GauCsBGCi4Gim3mqgBspOBioNhmrgrARgouBopt5qoAbKTgYqDYZq4KwEYKLgaKbeYSN/8SBs83kIKPgWJBufHwB883kIKPgWJBufHwB883kIKPgWJBufHwB883kIKPgWJBufHwB883kIKPgWJBufHwB883kIKPgWJBufHwB883kIKPgWJBufHwB883kIKPgWK7ubRrYfzB8w2k4GOg2E4u72Iwf/B8Ayn4GCi2k6sCSIFtEMZAsZ1cFUAKbIMwBort5KoAUmAbhDFQbCdXBZAC2yCMxf7Aozuz2c33m0se/mA2+8bdTmwn9z6t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" /><!-- --></p>
-<p>The same function supports <code>design = &#39;uncontrolled&#39;</code> (with
-<code>mu_t_go</code>, <code>mu_t_nogo</code>, <code>mu0_c</code>, and
-<code>r</code>; set <code>mu_c_go</code> and <code>mu_c_nogo</code> to
-<code>NULL</code>), <code>design = &#39;external&#39;</code> (with power prior
-arguments), and <code>prob = &#39;predictive&#39;</code> (with
-<code>theta_NULL</code>, <code>m_t</code>, and <code>m_c</code>). The
-calibration plot and the returned
-<code>gamma_go</code>/<code>gamma_nogo</code> values are available for
-all combinations.</p>
-<hr />
-</div>
-</div>
-<div id="summary" class="section level2">
-<h2>7. Summary</h2>
-<p>This vignette covered single continuous endpoint analysis in
-BayesianQDM:</p>
-<ol style="list-style-type: decimal">
-<li>Bayesian model: N-Inv-<span class="math inline">\(\chi^2\)</span>
-conjugate posterior (vague and informative priors) with explicit update
-formulae for <span class="math inline">\(\kappa_{nj}\)</span>, <span class="math inline">\(\nu_{nj}\)</span>, <span class="math inline">\(\mu_{nj}\)</span>, and <span class="math inline">\(\sigma_{nj}^2\)</span>.</li>
-<li>Posterior and predictive distributions: marginal <span class="math inline">\(t\)</span>-distributions for <span class="math inline">\(\mu_j\)</span> and <span class="math inline">\(\bar{\tilde{y}}_j\)</span>, with explicit scale
-expressions.</li>
-<li>Three computation methods: NI (exact), MC (simulation), MM
-(moment-matching approximation; Yamaguchi et al., 2025, Theorem 1); MM
-requires <span class="math inline">\(\nu_j &gt; 4\)</span> and is
-recommended for large-scale simulation.</li>
-<li>Three study designs: controlled (both groups observed), uncontrolled
-(<span class="math inline">\(\mu_{0c}\)</span> and <span class="math inline">\(r\)</span> fixed from prior knowledge), external
-design (power prior with borrowing weight <span class="math inline">\(\alpha_{0e,j}\)</span>; vague prior follows
-Theorem 4 of Huang et al. (2025), N-Inv-<span class="math inline">\(\chi^2\)</span> prior follows Theorems 1–2 of
-Huang et al. (2025)).</li>
-<li>Operating characteristics: Monte Carlo estimation of <span class="math inline">\(\Pr(\mathrm{Go})\)</span>, <span class="math inline">\(\Pr(\mathrm{NoGo})\)</span>, <span class="math inline">\(\Pr(\mathrm{Gray})\)</span> across true parameter
-scenarios.</li>
-<li>Optimal threshold search: two-stage precompute-then-sweep strategy
-in <code>getgamma1cont()</code> with user-specified criteria and
-selection rules.</li>
-</ol>
-<p>See <code>vignette(&quot;single-binary&quot;)</code> for the analogous binary
-endpoint analysis.</p>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Huang, Y., Yamaguchi, Y., Homma, G., Takeda, K. and Maruo, K.
+(submitted). Conjugate representation of power priors for efficient
+Bayesian analysis of normal data.</p>
+<p>Kang, R., Yamaguchi, Y. and Han, C. (2026). Bayesian quantitative
+decision-making framework in cell and gene therapy development for rare
+diseases. <em>Journal of Biopharmaceutical Statistics</em>. <a href="https://doi.org/10.1080/10543406.2026.2655410" class="uri">https://doi.org/10.1080/10543406.2026.2655410</a></p>
+<p>Yamaguchi, Y., Homma, G., Takeda, K. and Maruo, K. (submitted).
+Moment-matching approximation for t-differences in clinical trials with
+continuous endpoints.</p>
 </div>
 
 

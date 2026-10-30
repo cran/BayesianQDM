@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Time-to-event endpoint</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Time-to-event endpoint</h1>
+
+
+
+<p>This vignette describes the analysis of a proof-of-concept (PoC)
+study with one time-to-event endpoint, such as progression-free
+survival, evaluated by the survival probability at a milestone time or
+by the hazard ratio. <code>vignette(&quot;overview&quot;)</code> introduces the
+decision criteria.</p>
+<div id="model" class="section level2">
+<h2>Model</h2>
+<p>In group <span class="math inline">\(k\)</span> (<span class="math inline">\(k = t, c\)</span>), the event times are
+exponential with hazard <span class="math inline">\(\lambda_k\)</span>,
+and the data are summarized by the number of events <span class="math inline">\(d_k\)</span> and the total observed time <span class="math inline">\(E_k\)</span>, the sum of the follow-up times of
+all subjects until their event or censoring (<code>data_tte()</code>).
+With the Gamma prior <span class="math inline">\(\lambda_k \sim
+\textrm{Gamma}(a_k, b_k)\)</span> (shape <span class="math inline">\(a_k\)</span> and rate <span class="math inline">\(b_k\)</span>; <code>prior_gamma()</code>), the
+posterior distribution is <span class="math display">\[\lambda_k \mid D
+\sim \textrm{Gamma}(a_k + d_k, \; b_k + E_k).\]</span> The prior acts as
+<span class="math inline">\(a_k\)</span> events in a total observed time
+of <span class="math inline">\(b_k\)</span>, so a prior with a small
+shape and rate, such as <code>prior_gamma(0.1, 1)</code> with time in
+months, has little influence.</p>
+<p>The effect is the difference of the survival probabilities at the
+milestone time <span class="math inline">\(t_0\)</span>, <span class="math display">\[\theta = S_t(t_0) - S_c(t_0), \qquad S_k(t_0) =
+\exp(-\lambda_k t_0).\]</span> The posterior probability <span class="math inline">\(\Pr(\theta &gt; q \mid D)\)</span> is computed by
+numerical integration over the control hazard
+(<code>psurvdiff()</code>).</p>
+<p>Alternatively, the effect is the hazard ratio <span class="math inline">\(\theta = \lambda_t / \lambda_c\)</span>
+(<code>effect = &quot;hazard_ratio&quot;</code>; Huang et al., 2019). With the
+posterior shapes <span class="math inline">\(a_k^* = a_k + d_k\)</span>
+and rates <span class="math inline">\(b_k^* = b_k + E_k\)</span>, its
+posterior distribution is a scaled F distribution, <span class="math display">\[\frac{a_c^* b_t^*}{a_t^* b_c^*} \, \theta \mid D
+\sim
+F(2 a_t^*, 2 a_c^*),\]</span> so its posterior probabilities are
+computed exactly (<code>phazardratio()</code>).</p>
+<p>External data with <span class="math inline">\(d_e\)</span> events
+and total observed time <span class="math inline">\(E_e\)</span> enter
+through a power prior with weight <span class="math inline">\(a_0\)</span>, which adds <span class="math inline">\(a_0 d_e\)</span> to the shape and <span class="math inline">\(a_0 E_e\)</span> to the rate. A hypothetical
+control adds its events and total observed time to the prior of the
+control group.</p>
+</div>
+<div id="decision-for-observed-data" class="section level2">
+<h2>Decision for observed data</h2>
+<p>A single-arm study is often compared with a known benchmark. With
+<code>fixed_c</code>, the control survival probability at the milestone
+is a known value <span class="math inline">\(S_{c0}\)</span>, and the
+probabilities of the Go and NoGo regions are Gamma probabilities of the
+treatment hazard. Consider 30 subjects, a milestone of 3 months, a
+benchmark of 0.72, <span class="math inline">\(\theta_{TV} =
+0.15\)</span> and <span class="math inline">\(\theta_{MAV} =
+0\)</span>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>crit <span class="ot">&lt;-</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.15</span>, <span class="at">theta_mav =</span> <span class="dv">0</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>                            <span class="at">gamma_go =</span> <span class="fl">0.6</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.8</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>des <span class="ot">&lt;-</span> <span class="fu">design_tte</span>(<span class="at">n_t =</span> <span class="dv">30</span>, <span class="at">n_c =</span> <span class="dv">0</span>, <span class="at">prior_t =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>),</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>                  <span class="at">criterion =</span> crit, <span class="at">milestone =</span> <span class="dv">3</span>, <span class="at">fixed_c =</span> <span class="fl">0.72</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>dec <span class="ot">&lt;-</span> <span class="fu">qdm_decide</span>(des, <span class="at">data_t =</span> <span class="fu">data_tte</span>(<span class="at">events =</span> <span class="dv">6</span>, <span class="at">exposure =</span> <span class="dv">150</span>))</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>dec</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.15 | data) = 0.6863 (threshold 0.6, met)</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0 | data) = 0.001061 (threshold 0.8, not met)</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co">#&gt;   Treatment: hazard ~ Gamma(shape = 6.1, rate = 151)</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co">#&gt;   Control:   fixed value 0.72</span></span></code></pre></div>
+<p>The Go region is <span class="math inline">\(S_t(3) &gt; 0.72 +
+0.15\)</span>, that is <span class="math inline">\(\lambda_t &lt;
+-\log(0.87) / 3\)</span>, whose posterior probability is</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">pgamma</span>(<span class="sc">-</span><span class="fu">log</span>(<span class="fl">0.87</span>) <span class="sc">/</span> <span class="dv">3</span>, <span class="at">shape =</span> <span class="fl">0.1</span> <span class="sc">+</span> <span class="dv">6</span>, <span class="at">rate =</span> <span class="dv">1</span> <span class="sc">+</span> <span class="dv">150</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.6862592</span></span></code></pre></div>
+<p>With <code>fixed_c = 0</code>, the effect is the milestone survival
+probability itself, and the thresholds are survival probabilities.</p>
+<p>With a concurrent control group of 30 subjects:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>des_c <span class="ot">&lt;-</span> <span class="fu">design_tte</span>(<span class="at">n_t =</span> <span class="dv">30</span>, <span class="at">n_c =</span> <span class="dv">30</span>, <span class="at">prior_t =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>),</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>                    <span class="at">prior_c =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>), <span class="at">criterion =</span> crit,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>                    <span class="at">milestone =</span> <span class="dv">3</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>dec_c <span class="ot">&lt;-</span> <span class="fu">qdm_decide</span>(des_c, <span class="at">data_t =</span> <span class="fu">data_tte</span>(<span class="dv">6</span>, <span class="dv">150</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                    <span class="at">data_c =</span> <span class="fu">data_tte</span>(<span class="dv">12</span>, <span class="dv">140</span>))</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>dec_c</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; Decision: Gray</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.15 | data) = 0.2906 (threshold 0.6, not met)</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0 | data) = 0.05513 (threshold 0.8, not met)</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;   Treatment: hazard ~ Gamma(shape = 6.1, rate = 151)</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;   Control:   hazard ~ Gamma(shape = 12.1, rate = 141)</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>post_t <span class="ot">&lt;-</span> dec_c<span class="sc">$</span>posterior_t</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>post_c <span class="ot">&lt;-</span> dec_c<span class="sc">$</span>posterior_c</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="fu">psurvdiff</span>(<span class="fl">0.15</span>, <span class="at">milestone =</span> <span class="dv">3</span>, <span class="at">shape_t =</span> post_t[[<span class="st">&quot;shape&quot;</span>]],</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>          <span class="at">rate_t =</span> post_t[[<span class="st">&quot;rate&quot;</span>]], <span class="at">shape_c =</span> post_c[[<span class="st">&quot;shape&quot;</span>]],</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>          <span class="at">rate_c =</span> post_c[[<span class="st">&quot;rate&quot;</span>]], <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; [1] 0.2905515</span></span></code></pre></div>
+<p>External control data and hypothetical controls are given as in the
+other vignettes, with <code>borrow(data_tte(...), a0)</code> and
+<code>hypothetical(data_tte(...))</code>.</p>
+</div>
+<div id="conduct-of-the-study" class="section level2">
+<h2>Conduct of the study</h2>
+<p>The operating characteristics and the predictive criterion need the
+timing of the study, which <code>conduct_tte()</code> specifies: the
+enrollment (piecewise uniform over the intervals of
+<code>accrual_time</code> with relative rates
+<code>accrual_rate</code>), the dropout (piecewise exponential hazards)
+and the time of the analysis, either at a calendar time
+(<code>cut_time</code>) or at the time of a given number of events among
+all subjects of the study (<code>cut_events</code>). For example,
+enrollment over 15 months with increasing rates, a small dropout hazard
+and an analysis 15.44 months after the start of enrollment:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>cond <span class="ot">&lt;-</span> <span class="fu">conduct_tte</span>(<span class="at">accrual_time =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>),</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>                    <span class="at">accrual_rate =</span> <span class="fu">c</span>(<span class="fl">0.4</span>, <span class="dv">2</span>, <span class="fl">4.5</span>),</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>                    <span class="at">dropout_hazard =</span> <span class="fl">0.00226</span>, <span class="at">cut_time =</span> <span class="fl">15.44</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>cond</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; Enrollment: piecewise uniform on (0, 5, 10, 15) with rates (0.4, 2.0, 4.5)</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; Dropout: hazard 0.00226</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; Analysis: at time 15.44</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>des <span class="ot">&lt;-</span> <span class="fu">design_tte</span>(<span class="at">n_t =</span> <span class="dv">30</span>, <span class="at">n_c =</span> <span class="dv">0</span>, <span class="at">prior_t =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>                  <span class="at">criterion =</span> crit, <span class="at">milestone =</span> <span class="dv">3</span>, <span class="at">conduct =</span> cond,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>                  <span class="at">fixed_c =</span> <span class="fl">0.72</span>)</span></code></pre></div>
+</div>
+<div id="predictive-criterion" class="section level2">
+<h2>Predictive criterion</h2>
+<p>For the predictive criterion, a future study with <span class="math inline">\(m_t\)</span> and <span class="math inline">\(m_c\)</span> subjects is conducted as specified by
+<code>conduct_future</code> (by default <code>conduct</code>). The
+survival probability of each group in the future study is estimated by
+<span class="math inline">\(\exp\{-t_0 (a + \tilde d) / (b + \tilde
+E)\}\)</span>, from its number of events <span class="math inline">\(\tilde d\)</span> and total observed time <span class="math inline">\(\tilde E\)</span>, and the future effect is the
+difference of the two estimates (or the treatment estimate minus the
+fixed value). The predictive probabilities are estimated by simulating
+<code>nMC</code> future studies, each with hazards drawn from the
+posterior distributions, so they are Monte Carlo estimates and depend on
+the seed:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>des_pred <span class="ot">&lt;-</span> <span class="fu">design_tte</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">30</span>, <span class="at">n_c =</span> <span class="dv">0</span>, <span class="at">prior_t =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>),</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">criterion_predictive</span>(<span class="at">theta_null =</span> <span class="fl">0.05</span>, <span class="at">m_t =</span> <span class="dv">60</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                                   <span class="at">gamma_go =</span> <span class="fl">0.8</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.3</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">milestone =</span> <span class="dv">3</span>, <span class="at">conduct =</span> cond, <span class="at">fixed_c =</span> <span class="fl">0.72</span>, <span class="at">nMC =</span> <span class="dv">5000</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">qdm_decide</span>(des_pred, <span class="at">data_t =</span> <span class="fu">data_tte</span>(<span class="dv">6</span>, <span class="dv">150</span>), <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;   Go:   P(future theta &gt; 0.05 | data) = 0.9682 (threshold 0.8, met)</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(future theta &lt;= 0.05 | data) = 0.0318 (threshold 0.3, not met)</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;   Treatment: hazard ~ Gamma(shape = 6.1, rate = 151)</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;   Control:   fixed value 0.72</span></span></code></pre></div>
+</div>
+<div id="operating-characteristics" class="section level2">
+<h2>Operating characteristics</h2>
+<p>A scenario gives the median survival time of each group
+(<code>median_t</code> and, with a concurrent control group,
+<code>median_c</code>), and the hazard is <span class="math inline">\(\log 2\)</span> divided by the median.
+<code>qdm_oc()</code> simulates <code>nsim</code> studies conducted as
+specified by <code>conduct</code>, with the same random numbers for all
+scenarios. The median for which the milestone survival equals the
+benchmark is <code>med0</code> below, and the median for which it equals
+the benchmark plus <span class="math inline">\(\theta_{TV}\)</span> is
+<code>med1</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>med0 <span class="ot">&lt;-</span> <span class="dv">3</span> <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">2</span>) <span class="sc">/</span> <span class="sc">-</span><span class="fu">log</span>(<span class="fl">0.72</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>med1 <span class="ot">&lt;-</span> <span class="dv">3</span> <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">2</span>) <span class="sc">/</span> <span class="sc">-</span><span class="fu">log</span>(<span class="fl">0.72</span> <span class="sc">+</span> <span class="fl">0.15</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">c</span>(med0, med1)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; [1]  6.330033 14.931859</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>scen <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">median_t =</span> <span class="fu">c</span>(<span class="dv">6</span>, <span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">12</span>, <span class="dv">15</span>, <span class="dv">20</span>))</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>oc <span class="ot">&lt;-</span> <span class="fu">qdm_oc</span>(des, scen, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>oc</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; Operating characteristics (simulation of 10000 studies; probabilities by exact computation (fixed control))</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  median_t     Go   NoGo   Gray Miss</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;         6 0.0035 0.2252 0.7713    0</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;         8 0.0384 0.0435 0.9181    0</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt;        10 0.1284 0.0083 0.8633    0</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;        12 0.2671 0.0018 0.7311    0</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;        15 0.4681 0.0002 0.5317    0</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt;        20 0.7152 0.0000 0.2848    0</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="fu">plot</span>(oc)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The horizontal axis is the survival probability of the treatment
+group at the milestone, and the vertical lines are shifted by the fixed
+control value. For a design with a concurrent control group, the
+probabilities of each simulated study are computed by numerical
+integration, which takes longer; here 1000 studies are simulated per
+scenario:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>des_c <span class="ot">&lt;-</span> <span class="fu">design_tte</span>(<span class="at">n_t =</span> <span class="dv">30</span>, <span class="at">n_c =</span> <span class="dv">30</span>, <span class="at">prior_t =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>),</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>                    <span class="at">prior_c =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>), <span class="at">criterion =</span> crit,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>                    <span class="at">milestone =</span> <span class="dv">3</span>, <span class="at">conduct =</span> cond)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>oc_c <span class="ot">&lt;-</span> <span class="fu">qdm_oc</span>(des_c, <span class="fu">data.frame</span>(<span class="at">median_t =</span> <span class="fu">c</span>(med0, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>                                 <span class="at">median_c =</span> med0), <span class="at">nsim =</span> <span class="dv">1000</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>oc_c</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; Operating characteristics (simulation of 1000 studies; probabilities by numerical integration)</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;  median_t median_c    Go  NoGo  Gray Miss</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;      6.33     6.33 0.033 0.193 0.774    0</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;     10.00     6.33 0.183 0.033 0.784    0</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;     15.00     6.33 0.389 0.002 0.609    0</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;     20.00     6.33 0.530 0.002 0.468    0</span></span></code></pre></div>
+<p>With a predictive criterion, every simulated study requires
+<code>nMC</code> simulated future studies, so small values of
+<code>nsim</code> and <code>nMC</code> are advisable for
+exploration.</p>
+</div>
+<div id="calibration-of-the-thresholds" class="section level2">
+<h2>Calibration of the thresholds</h2>
+<p>The thresholds of the single-arm design are calibrated so that the Go
+criterion is met with probability at most 0.05 when the milestone
+survival equals the benchmark (median <code>med0</code>), and the NoGo
+criterion with probability at most 0.1 when it equals the benchmark plus
+0.15 (median <code>med1</code>):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>cal <span class="ot">&lt;-</span> <span class="fu">qdm_calibrate</span>(des, <span class="at">scenario_go =</span> <span class="fu">data.frame</span>(<span class="at">median_t =</span> med0),</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>                     <span class="at">scenario_nogo =</span> <span class="fu">data.frame</span>(<span class="at">median_t =</span> med1),</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>                     <span class="at">target_go =</span> <span class="fl">0.05</span>, <span class="at">target_nogo =</span> <span class="fl">0.1</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>cal</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; Calibration of the decision thresholds (simulation of 10000 studies; probabilities by exact computation (fixed control))</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt;   gamma_go   = 0.24: P(Go criterion met | scenario_go) = 0.0489 (target 0.05)</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt;   gamma_nogo = 0.1: P(NoGo criterion met | scenario_nogo) = 0.0928 (target 0.1)</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; Decision probabilities with the chosen thresholds</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt;       scenario median_t     Go   NoGo   Gray Miss</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt;    scenario_go     6.33 0.0489 0.8815 0.0696    0</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt;  scenario_nogo    14.93 0.7995 0.0928 0.1077    0</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="fu">plot</span>(cal)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The chosen thresholds are <span class="math inline">\(\gamma_{go}
+=\)</span> 0.24 and <span class="math inline">\(\gamma_{nogo} =\)</span>
+0.1.</p>
+</div>
+<div id="decision-boundary" class="section level2">
+<h2>Decision boundary</h2>
+<p><code>qdm_boundary()</code> gives, for each total observed time of
+the treatment group, the numbers of events that lead to Go, NoGo and
+Gray decisions, with the corresponding observed milestone survival
+probabilities <span class="math inline">\(\exp(-t_0 d_t / E_t)\)</span>
+and observed effects. With a posterior criterion, it does not depend on
+the conduct of the study:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">qdm_boundary</span>(des, <span class="at">exposure_t =</span> <span class="fu">seq</span>(<span class="dv">100</span>, <span class="dv">300</span>, <span class="at">by =</span> <span class="dv">50</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>b</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; Decision boundary of a design with one time-to-event endpoint (milestone survival)</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; Events in the treatment group (d_t)</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;   exposure_t   Go     Gray    NoGo</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt;   100          0-4    5-14    15-30</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt;   150          0-6    7-20    21-30</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt;   200          0-8    9-26    27-30</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt;   250          0-11   12-30   -</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt;   300          0-13   14-30   -</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; Observed milestone survival exp(-3 d_t / E_t)</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt;   exposure_t   Go            Gray               NoGo</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt;   100          0.8869 to 1   0.657 to 0.8607    0.4066 to 0.6376</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt;   150          0.8869 to 1   0.6703 to 0.8694   0.5488 to 0.657</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt;   200          0.8869 to 1   0.6771 to 0.8737   0.6376 to 0.667</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt;   250          0.8763 to 1   0.6977 to 0.8659   -</span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt;   300          0.8781 to 1   0.7408 to 0.8694   -</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; Observed difference in milestone survival (control 0.72, fixed control value)</span></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co">#&gt;   exposure_t   Go               Gray                 NoGo</span></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co">#&gt;   100          0.1669 to 0.28   -0.06295 to 0.1407   -0.3134 to -0.08237</span></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co">#&gt;   150          0.1669 to 0.28   -0.04968 to 0.1494   -0.1712 to -0.06295</span></span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a><span class="co">#&gt;   200          0.1669 to 0.28   -0.04294 to 0.1537   -0.08237 to -0.05302</span></span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a><span class="co">#&gt;   250          0.1563 to 0.28   -0.02232 to 0.1459   -</span></span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a><span class="co">#&gt;   300          0.1581 to 0.28   0.02082 to 0.1494    -</span></span></code></pre></div>
+<p>With a total observed time of 150 months, a Go decision needs at most
+6 events. The plot shows the regions of the decisions over many values
+of the total observed time:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">qdm_boundary</span>(des, <span class="at">exposure_t =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">400</span>, <span class="at">by =</span> <span class="dv">5</span>)))</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>For a design with a concurrent control group, the observed control
+data are given by <code>data_c</code>.</p>
+</div>
+<div id="hazard-ratio" class="section level2">
+<h2>Hazard ratio</h2>
+<p>With <code>effect = &quot;hazard_ratio&quot;</code>, smaller effects are
+favorable, so the criterion is specified with
+<code>direction = &quot;less&quot;</code>: the Go region is <span class="math inline">\(\theta &lt; \theta_{TV}\)</span> and the NoGo
+region is <span class="math inline">\(\theta \ge \theta_{MAV}\)</span>,
+with <span class="math inline">\(\theta_{TV} &lt; \theta_{MAV}\)</span>.
+The example of Huang et al. (2019) is a randomized study with 112
+subjects in the treatment group and 56 in the control group, uniform
+enrollment over 13 months, a control median survival time of 8.5 months,
+a loss-to-follow-up hazard of 0.003 per month, a target value of 0.67
+and a minimum acceptable value of 0.8 for the hazard ratio, and an
+analysis at 127 events. Huang et al. (2019) use the minimum acceptable
+value in their Go rule, as a bound for the upper confidence limit of the
+hazard ratio. Here the decision is Go if the hazard ratio is below 0.67
+with probability at least 0.5, and NoGo if it is at least 0.8 with
+probability at least 0.6:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>crit_hr <span class="ot">&lt;-</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.67</span>, <span class="at">theta_mav =</span> <span class="fl">0.8</span>,</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>                               <span class="at">gamma_go =</span> <span class="fl">0.5</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.6</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>                               <span class="at">direction =</span> <span class="st">&quot;less&quot;</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>des_hr <span class="ot">&lt;-</span> <span class="fu">design_tte</span>(</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">112</span>, <span class="at">n_c =</span> <span class="dv">56</span>, <span class="at">prior_t =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.01</span>, <span class="fl">0.01</span>),</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">prior_c =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.01</span>, <span class="fl">0.01</span>), <span class="at">criterion =</span> crit_hr,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">effect =</span> <span class="st">&quot;hazard_ratio&quot;</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="at">conduct =</span> <span class="fu">conduct_tte</span>(<span class="at">accrual_time =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">13</span>), <span class="at">dropout_hazard =</span> <span class="fl">0.003</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>                        <span class="at">cut_events =</span> <span class="dv">127</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>)</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>dec_hr <span class="ot">&lt;-</span> <span class="fu">qdm_decide</span>(des_hr, <span class="at">data_t =</span> <span class="fu">data_tte</span>(<span class="dv">75</span>, <span class="dv">1100</span>),</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>                     <span class="at">data_c =</span> <span class="fu">data_tte</span>(<span class="dv">52</span>, <span class="dv">420</span>))</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>dec_hr</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &lt; 0.67 | data) = 0.8569 (threshold 0.5, met)</span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &gt;= 0.8 | data) = 0.02137 (threshold 0.6, not met)</span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co">#&gt;   Treatment: hazard ~ Gamma(shape = 75.01, rate = 1100)</span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt;   Control:   hazard ~ Gamma(shape = 52.01, rate = 420)</span></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>post_t <span class="ot">&lt;-</span> dec_hr<span class="sc">$</span>posterior_t</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>post_c <span class="ot">&lt;-</span> dec_hr<span class="sc">$</span>posterior_c</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a><span class="fu">phazardratio</span>(<span class="fl">0.67</span>, <span class="at">shape_t =</span> post_t[[<span class="st">&quot;shape&quot;</span>]], <span class="at">rate_t =</span> post_t[[<span class="st">&quot;rate&quot;</span>]],</span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>             <span class="at">shape_c =</span> post_c[[<span class="st">&quot;shape&quot;</span>]], <span class="at">rate_c =</span> post_c[[<span class="st">&quot;rate&quot;</span>]])</span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a><span class="co">#&gt; [1] 0.8569464</span></span></code></pre></div>
+<p>The argument <code>milestone</code> is not used and must not be
+given. Under the exponential model, the hazard ratio is the ratio of the
+median survival times of the control and treatment groups, which is the
+horizontal axis of the plot of operating characteristics:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>oc_hr <span class="ot">&lt;-</span> <span class="fu">qdm_oc</span>(des_hr, <span class="fu">data.frame</span>(<span class="at">median_t =</span> <span class="fl">8.5</span> <span class="sc">/</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.6</span>, <span class="fl">0.7</span>, <span class="fl">0.8</span>, <span class="dv">1</span>),</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>                                   <span class="at">median_c =</span> <span class="fl">8.5</span>), <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>oc_hr</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt; Operating characteristics (simulation of 10000 studies; probabilities by exact computation (F distribution))</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;  median_t median_c     Go   NoGo   Gray Miss</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;     17.00      8.5 0.9433 0.0017 0.0550    0</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;     14.17      8.5 0.7204 0.0358 0.2438    0</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt;     12.14      8.5 0.4108 0.1685 0.4207    0</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;     10.62      8.5 0.1702 0.3985 0.4313    0</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt;      8.50      8.5 0.0176 0.8258 0.1566    0</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="fu">plot</span>(oc_hr)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The probabilities of a Go decision are close to those of Table 1 of
+Huang et al. (2019), which are based on the normal approximation of the
+estimated log hazard ratio (0.946, 0.727, 0.406 and 0.170 for hazard
+ratios of 0.5, 0.6, 0.7 and 0.8). The decision boundary gives the
+numbers of treatment events that lead to each decision for given total
+observed times of the treatment group and given control data
+(<code>data_c</code>), with the observed hazard ratios <span class="math inline">\((d_t / E_t) / (d_c / E_c)\)</span>:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">qdm_boundary</span>(des_hr, <span class="at">exposure_t =</span> <span class="fu">seq</span>(<span class="dv">800</span>, <span class="dv">1400</span>, <span class="at">by =</span> <span class="dv">200</span>),</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>             <span class="at">data_c =</span> <span class="fu">data_tte</span>(<span class="dv">52</span>, <span class="dv">420</span>))</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt; Decision boundary of a design with one time-to-event endpoint (hazard ratio)</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt;   Control data: time-to-event, events = 52, exposure = 420</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt; Events in the treatment group (d_t)</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt;   exposure_t   Go      Gray      NoGo</span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt;   800          0-66    67-82     83-112</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt;   1000         0-82    83-103    104-112</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt;   1200         0-99    100-112   -</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt;   1400         0-112   -         -</span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co">#&gt; Observed hazard ratio: d_t / E_t divided by the control hazard 0.1238 (observed in the control group)</span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt;   exposure_t   Go            Gray               NoGo</span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="co">#&gt;   800          0 to 0.6663   0.6764 to 0.8279   0.838 to 1.131</span></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co">#&gt;   1000         0 to 0.6623   0.6704 to 0.8319   0.84 to 0.9046</span></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="co">#&gt;   1200         0 to 0.6663   0.6731 to 0.7538   -</span></span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="co">#&gt;   1400         0 to 0.6462   -                  -</span></span></code></pre></div>
+<p>For a single-arm study, <code>fixed_c</code> is the median survival
+time of the control, whose hazard is <span class="math inline">\(\log
+2\)</span> divided by it. For the predictive criterion, the hazard of
+each group in the future study is estimated by <span class="math inline">\((a + \tilde d) / (b + \tilde E)\)</span>, the
+future effect is the ratio of the two estimates, and with
+<code>direction = &quot;less&quot;</code> the Go region is that it is below <span class="math inline">\(\theta_{NULL}\)</span>.</p>
+</div>
+<div id="reference" class="section level2">
+<h2>Reference</h2>
+<p>Huang, B., Talukder, E., Han, L. and Kuan, P.-F. (2019). Quantitative
+decision-making in randomized Phase II studies with a time-to-event
+endpoint. <em>Journal of Biopharmaceutical Statistics</em>, 29(1),
+189–202. <a href="https://doi.org/10.1080/10543406.2018.1489400" class="uri">https://doi.org/10.1080/10543406.2018.1489400</a></p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

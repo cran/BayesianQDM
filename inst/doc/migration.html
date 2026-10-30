@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Migrating from version 0.1.0</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Migrating from version 0.1.0</h1>
+
+
+
+<p>Version 1.0.0 of BayesianQDM is a redesign of version 0.1.0 and is
+not backward compatible. In version 0.1.0, each combination of endpoint
+and operation had its own function with up to about 50 arguments. In
+version 1.0.0, a study is described by small specification objects that
+are combined into a design, and three functions work with any design.
+This vignette shows how to translate code written for version 0.1.0 and
+lists the changes in the results. The code for version 0.1.0 is shown
+but not run.</p>
+<div id="correspondence-of-the-functions" class="section level2">
+<h2>Correspondence of the functions</h2>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Version 0.1.0</th>
+<th>Version 1.0.0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pbayespostpred1bin()</code>,
+<code>pbayespostpred1cont()</code>, <code>pbayespostpred2bin()</code>,
+<code>pbayespostpred2cont()</code></td>
+<td><code>qdm_decide()</code> with a design and observed data</td>
+</tr>
+<tr class="even">
+<td><code>pbayesdecisionprob1bin()</code>,
+<code>pbayesdecisionprob1cont()</code>,
+<code>pbayesdecisionprob2bin()</code>,
+<code>pbayesdecisionprob2cont()</code></td>
+<td><code>qdm_oc()</code></td>
+</tr>
+<tr class="odd">
+<td><code>getgamma1bin()</code>, <code>getgamma1cont()</code>,
+<code>getgamma2bin()</code>, <code>getgamma2cont()</code></td>
+<td><code>qdm_calibrate()</code></td>
+</tr>
+<tr class="even">
+<td><code>ptdiff_NI()</code>, <code>ptdiff_MC()</code>,
+<code>ptdiff_MM()</code></td>
+<td><code>ptdiff()</code> with <code>method = &quot;NI&quot;</code>,
+<code>&quot;MC&quot;</code> or <code>&quot;MM&quot;</code></td>
+</tr>
+<tr class="odd">
+<td><code>pbetadiff()</code>, <code>pbetabinomdiff()</code></td>
+<td>Same names, with the arguments ordered by group</td>
+</tr>
+<tr class="even">
+<td><code>getjointbin()</code></td>
+<td><code>cellprob_binary2()</code></td>
+</tr>
+<tr class="odd">
+<td><code>rdirichlet()</code></td>
+<td>Same name</td>
+</tr>
+<tr class="even">
+<td><code>allmultinom()</code></td>
+<td>Internal function</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="correspondence-of-the-arguments" class="section level2">
+<h2>Correspondence of the arguments</h2>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Version 0.1.0</th>
+<th>Version 1.0.0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>prob = &#39;posterior&#39;</code> with <code>theta_TV</code>,
+<code>theta_MAV</code>, <code>gamma_go</code>,
+<code>gamma_nogo</code></td>
+<td><code>criterion_posterior(theta_tv, theta_mav, gamma_go, gamma_nogo)</code></td>
+</tr>
+<tr class="even">
+<td><code>prob = &#39;predictive&#39;</code> with <code>theta_NULL</code>,
+<code>m_t</code>, <code>m_c</code></td>
+<td><code>criterion_predictive(theta_null, m_t, m_c, gamma_go, gamma_nogo)</code></td>
+</tr>
+<tr class="odd">
+<td><code>a_t</code>, <code>b_t</code>, <code>a_c</code>,
+<code>b_c</code></td>
+<td><code>prior_beta(a, b)</code> for each group</td>
+</tr>
+<tr class="even">
+<td><code>prior = &#39;vague&#39;</code></td>
+<td><code>prior_vague()</code></td>
+</tr>
+<tr class="odd">
+<td><code>prior = &#39;N-Inv-Chisq&#39;</code> with <code>mu0_*</code>,
+<code>kappa0_*</code>, <code>nu0_*</code>, <code>sigma0_*</code></td>
+<td><code>prior_nix(mu0, kappa0, nu0, sigma0)</code> for each group</td>
+</tr>
+<tr class="even">
+<td><code>CalcMethod</code></td>
+<td><code>method</code> of <code>design_continuous()</code> and
+<code>design_continuous2()</code></td>
+</tr>
+<tr class="odd">
+<td><code>design = &#39;controlled&#39;</code></td>
+<td><code>n_c</code> of at least 1 (binary endpoints), 2 (one continuous
+endpoint) or 3 (two continuous endpoints)</td>
+</tr>
+<tr class="even">
+<td><code>design = &#39;external&#39;</code> with <code>ne_*</code>,
+<code>ye_*</code> (or <code>bar_ye_*</code>, <code>se_*</code>) and
+<code>alpha0e_*</code></td>
+<td><code>borrow(data_*(...), a0)</code> as <code>external_t</code> or
+<code>external_c</code></td>
+</tr>
+<tr class="odd">
+<td><code>design = &#39;uncontrolled&#39;</code> with <code>z</code> (binary) or
+<code>mu0_c</code> and <code>r</code> (continuous)</td>
+<td><code>n_c = 0</code> and
+<code>hypothetical_c = hypothetical(...)</code></td>
+</tr>
+<tr class="even">
+<td><code>pi_t</code>, <code>pi_c</code> and similar vectors of true
+parameters</td>
+<td>A data frame of scenarios</td>
+</tr>
+<tr class="odd">
+<td><code>error_if_Miss</code>, <code>Gray_inc_Miss</code></td>
+<td>Removed; Miss decisions are reported in their own column</td>
+</tr>
+<tr class="even">
+<td><code>col_go</code>, <code>col_nogo</code>, <code>col_gray</code>
+and <code>base_size</code> of the <code>plot()</code> methods</td>
+<td>Same names, with <code>col_miss</code>, <code>linewidth</code>,
+<code>point_size</code>, <code>label_size</code> and
+<code>legend_position</code> where they apply; <code>base_size</code> is
+11 by default instead of 28</td>
+</tr>
+<tr class="odd">
+<td><code>title</code>, <code>xlab</code> and <code>ylab</code> of the
+<code>plot()</code> methods</td>
+<td><code>ggplot2::labs()</code> added to the plot</td>
+</tr>
+<tr class="even">
+<td><code>which</code> of the <code>plot()</code> methods for two
+endpoints</td>
+<td>One panel per decision by default; <code>overlay = TRUE</code> for
+<code>which = &quot;overlay&quot;</code></td>
+</tr>
+</tbody>
+</table>
+<p>The meaning of <code>gamma_nogo</code> is unchanged: the NoGo
+criterion is <span class="math inline">\(\Pr(\theta \le \theta_{MAV}
+\mid D) \ge \gamma_{nogo}\)</span>.</p>
+</div>
+<div id="posterior-probability-for-observed-data" class="section level2">
+<h2>Posterior probability for observed data</h2>
+<p>Version 0.1.0:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">pbayespostpred1bin</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>, <span class="at">theta0 =</span> <span class="fl">0.05</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">10</span>, <span class="at">n_c =</span> <span class="dv">10</span>, <span class="at">y_t =</span> <span class="dv">7</span>, <span class="at">y_c =</span> <span class="dv">3</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">a_t =</span> <span class="fl">0.5</span>, <span class="at">b_t =</span> <span class="fl">0.5</span>, <span class="at">a_c =</span> <span class="fl">0.5</span>, <span class="at">b_c =</span> <span class="fl">0.5</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>, <span class="at">z =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">ye_t =</span> <span class="cn">NULL</span>, <span class="at">ye_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>)</span></code></pre></div>
+<p>Version 1.0.0 computes the probability directly from the posterior
+distributions <span class="math inline">\(\textrm{Beta}(7.5,
+3.5)\)</span> and <span class="math inline">\(\textrm{Beta}(3.5,
+7.5)\)</span>, or as the probability of the Go region of a design whose
+target value is 0.05:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">pbetadiff</span>(<span class="fl">0.05</span>, <span class="at">a_t =</span> <span class="fl">7.5</span>, <span class="at">b_t =</span> <span class="fl">3.5</span>, <span class="at">a_c =</span> <span class="fl">3.5</span>, <span class="at">b_c =</span> <span class="fl">7.5</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>          <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; [1] 0.941619</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>des <span class="ot">&lt;-</span> <span class="fu">design_binary</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">10</span>, <span class="at">n_c =</span> <span class="dv">10</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">prior_t =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>), <span class="at">prior_c =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>),</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.05</span>, <span class="at">theta_mav =</span> <span class="dv">0</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>                                  <span class="at">gamma_go =</span> <span class="fl">0.8</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.8</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>)</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="fu">qdm_decide</span>(des, <span class="at">data_t =</span> <span class="fu">data_binary</span>(<span class="dv">10</span>, <span class="dv">7</span>), <span class="at">data_c =</span> <span class="fu">data_binary</span>(<span class="dv">10</span>, <span class="dv">3</span>))</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.05 | data) = 0.9416 (threshold 0.8, met)</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0 | data) = 0.03567 (threshold 0.8, not met)</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt;   Treatment: Beta(a = 7.5, b = 3.5)</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;   Control:   Beta(a = 3.5, b = 7.5)</span></span></code></pre></div>
+</div>
+<div id="operating-characteristics" class="section level2">
+<h2>Operating characteristics</h2>
+<p>Version 0.1.0:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">pbayesdecisionprob1bin</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">theta_TV =</span> <span class="fl">0.30</span>, <span class="at">theta_MAV =</span> <span class="fl">0.10</span>, <span class="at">theta_NULL =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">gamma_go =</span> <span class="fl">0.80</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.20</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">pi_t =</span> <span class="fu">seq</span>(<span class="fl">0.15</span>, <span class="fl">0.9</span>, <span class="at">l =</span> <span class="dv">10</span>), <span class="at">pi_c =</span> <span class="fu">rep</span>(<span class="fl">0.15</span>, <span class="dv">10</span>),</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">10</span>, <span class="at">n_c =</span> <span class="dv">10</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">a_t =</span> <span class="fl">0.5</span>, <span class="at">b_t =</span> <span class="fl">0.5</span>, <span class="at">a_c =</span> <span class="fl">0.5</span>, <span class="at">b_c =</span> <span class="fl">0.5</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">z =</span> <span class="cn">NULL</span>, <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">ye_t =</span> <span class="cn">NULL</span>, <span class="at">ye_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>)</span></code></pre></div>
+<p>Version 1.0.0:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>des <span class="ot">&lt;-</span> <span class="fu">design_binary</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">10</span>, <span class="at">n_c =</span> <span class="dv">10</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">prior_t =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>), <span class="at">prior_c =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.30</span>, <span class="at">theta_mav =</span> <span class="fl">0.10</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>                                  <span class="at">gamma_go =</span> <span class="fl">0.80</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.20</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>oc <span class="ot">&lt;-</span> <span class="fu">qdm_oc</span>(des, <span class="fu">data.frame</span>(<span class="at">pi_t =</span> <span class="fu">seq</span>(<span class="fl">0.15</span>, <span class="fl">0.9</span>, <span class="at">length.out =</span> <span class="dv">10</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>                             <span class="at">pi_c =</span> <span class="fl">0.15</span>))</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>oc</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; Operating characteristics (exact enumeration of the outcomes)</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;    pi_t pi_c       Go     NoGo    Gray Miss</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;  0.1500 0.15 0.002463 0.944331 0.05321    0</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  0.2333 0.15 0.017369 0.833220 0.14941    0</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;  0.3167 0.15 0.060942 0.674407 0.26465    0</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;  0.4000 0.15 0.146761 0.496338 0.35690    0</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt;  0.4833 0.15 0.277721 0.328306 0.39397    0</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt;  0.5667 0.15 0.442619 0.191543 0.36584    0</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;  0.6500 0.15 0.618562 0.095484 0.28595    0</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt;  0.7333 0.15 0.778091 0.038434 0.18347    0</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt;  0.8167 0.15 0.898385 0.011172 0.09044    0</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt;  0.9000 0.15 0.969265 0.001785 0.02895    0</span></span></code></pre></div>
+</div>
+<div id="calibration-of-the-thresholds" class="section level2">
+<h2>Calibration of the thresholds</h2>
+<p>Version 0.1.0:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">getgamma1bin</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">prob =</span> <span class="st">&#39;posterior&#39;</span>, <span class="at">design =</span> <span class="st">&#39;controlled&#39;</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">theta_TV =</span> <span class="fl">0.30</span>, <span class="at">theta_MAV =</span> <span class="fl">0.10</span>, <span class="at">theta_NULL =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">pi_t_go =</span> <span class="fl">0.15</span>, <span class="at">pi_c_go =</span> <span class="fl">0.15</span>, <span class="at">pi_t_nogo =</span> <span class="fl">0.35</span>, <span class="at">pi_c_nogo =</span> <span class="fl">0.15</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">target_go =</span> <span class="fl">0.05</span>, <span class="at">target_nogo =</span> <span class="fl">0.20</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span><span class="dt">L</span>, <span class="at">n_c =</span> <span class="dv">12</span><span class="dt">L</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">a_t =</span> <span class="fl">0.5</span>, <span class="at">b_t =</span> <span class="fl">0.5</span>, <span class="at">a_c =</span> <span class="fl">0.5</span>, <span class="at">b_c =</span> <span class="fl">0.5</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">z =</span> <span class="cn">NULL</span>, <span class="at">m_t =</span> <span class="cn">NULL</span>, <span class="at">m_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">ne_t =</span> <span class="cn">NULL</span>, <span class="at">ne_c =</span> <span class="cn">NULL</span>, <span class="at">ye_t =</span> <span class="cn">NULL</span>, <span class="at">ye_c =</span> <span class="cn">NULL</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">alpha0e_t =</span> <span class="cn">NULL</span>, <span class="at">alpha0e_c =</span> <span class="cn">NULL</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>)</span></code></pre></div>
+<p>Version 1.0.0 (the thresholds of the design are replaced by the
+calibrated ones):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>des12 <span class="ot">&lt;-</span> <span class="fu">design_binary</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">prior_t =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>), <span class="at">prior_c =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.30</span>, <span class="at">theta_mav =</span> <span class="fl">0.10</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>                                  <span class="at">gamma_go =</span> <span class="fl">0.80</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.20</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>cal <span class="ot">&lt;-</span> <span class="fu">qdm_calibrate</span>(des12,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>                     <span class="at">scenario_go =</span> <span class="fu">data.frame</span>(<span class="at">pi_t =</span> <span class="fl">0.15</span>, <span class="at">pi_c =</span> <span class="fl">0.15</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>                     <span class="at">scenario_nogo =</span> <span class="fu">data.frame</span>(<span class="at">pi_t =</span> <span class="fl">0.35</span>, <span class="at">pi_c =</span> <span class="fl">0.15</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>                     <span class="at">target_go =</span> <span class="fl">0.05</span>, <span class="at">target_nogo =</span> <span class="fl">0.20</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>cal</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; Calibration of the decision thresholds (exact enumeration of the outcomes)</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;   gamma_go   = 0.29: P(Go criterion met | scenario_go) = 0.04873 (target 0.05)</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;   gamma_nogo = 0.59: P(NoGo criterion met | scenario_nogo) = 0.182 (target 0.2)</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; Decision probabilities with the chosen thresholds</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt;       scenario pi_t pi_c      Go   NoGo   Gray Miss</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt;    scenario_go 0.15 0.15 0.04873 0.6584 0.2929    0</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;  scenario_nogo 0.35 0.15 0.45442 0.1820 0.3636    0</span></span></code></pre></div>
+<p>Version 0.1.0 required the probabilities to be less than the targets;
+version 1.0.0 requires them to be at most the targets.</p>
+</div>
+<div id="external-data-and-hypothetical-controls" class="section level2">
+<h2>External data and hypothetical controls</h2>
+<p>External data given in version 0.1.0 by
+<code>ne_c = 20, ye_c = 5, alpha0e_c = 0.5</code> are given in version
+1.0.0 by
+<code>external_c = borrow(data_binary(n = 20, y = 5), a0 = 0.5)</code>.
+For a continuous endpoint, <code>ne_c</code>, <code>bar_ye_c</code>,
+<code>se_c</code> and <code>alpha0e_c</code> become
+<code>borrow(data_continuous(n, mean, sd), a0)</code>.</p>
+<p>The uncontrolled design of version 0.1.0 with <code>z</code>
+hypothetical responders among <code>n_c</code> control subjects and
+control prior <span class="math inline">\(\textrm{Beta}(a_c,
+b_c)\)</span> corresponds to <code>n_c = 0</code>,
+<code>prior_c = prior_beta(a_c, b_c)</code> and
+<code>hypothetical_c = hypothetical(data = data_binary(n_c, z))</code>;
+for example:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">design_binary</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">0</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">prior_t =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>), <span class="at">prior_c =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.30</span>, <span class="at">theta_mav =</span> <span class="fl">0.10</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>                                  <span class="at">gamma_go =</span> <span class="fl">0.80</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.20</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">hypothetical_c =</span> <span class="fu">hypothetical</span>(<span class="at">data =</span> <span class="fu">data_binary</span>(<span class="at">n =</span> <span class="dv">12</span>, <span class="at">y =</span> <span class="dv">2</span>))</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; Design: one binary endpoint</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;   Treatment: n = 12, prior Beta(a = 0.5, b = 0.5)</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;   Control: hypothetical, prior Beta(a = 0.5, b = 0.5)</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;     Hypothetical control: data (binary, n = 12, y = 2)</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; Posterior probability criterion</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.3 | data) &gt;= 0.8</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0.1 | data) &gt;= 0.2</span></span></code></pre></div>
+<p>For a continuous endpoint, <code>mu0_c</code> and <code>r</code>
+become <code>hypothetical(mean = mu0_c, r = r)</code>.</p>
+</div>
+<div id="changes-in-the-results" class="section level2">
+<h2>Changes in the results</h2>
+<p>Formulas and numerical methods that were wrong in version 0.1.0 have
+been corrected, so some results differ.</p>
+<ul>
+<li>The posterior predictive distribution of the mean of <span class="math inline">\(m\)</span> future subjects of a continuous
+endpoint has the squared scale <span class="math inline">\(\sigma_n^2 (1
+/ \kappa_n + 1 / m)\)</span> (one endpoint) and the scale matrix <span class="math inline">\((1 / \kappa_n + 1 / m) \Lambda_n / (\nu_n -
+1)\)</span> (two endpoints). Version 0.1.0 treated the future subjects
+as independent draws from the predictive distribution of one subject,
+which understates the uncertainty.</li>
+<li>With the vague prior and external data for a continuous endpoint,
+the posterior distribution of the mean has <span class="math inline">\(a_0 n_e + n - 1\)</span> degrees of freedom, and
+its scale uses the same denominator (version 0.1.0 used <span class="math inline">\(a_0 n_e + n\)</span>).</li>
+<li>For two binary endpoints, the predictive probabilities are computed
+exactly instead of by Monte Carlo simulation.</li>
+<li>For two continuous endpoints, the moment-matching approximation uses
+the real degrees of freedom (version 0.1.0 rounded them to an integer),
+and with Monte Carlo simulation each simulated study has its own draws
+(version 0.1.0 used the same draws for all simulated studies).</li>
+<li>Numerical integration for one continuous endpoint covers the whole
+real line (version 0.1.0 truncated the range).</li>
+<li>Probabilities are no longer set to 0 below
+<code>.Machine$double.eps^0.25</code>.</li>
+<li>Miss decisions (both criteria met) are reported in their own column
+with a warning, instead of an error or being counted as Gray.</li>
+<li><code>qdm_decide()</code>, <code>qdm_oc()</code>,
+<code>qdm_calibrate()</code> and <code>qdm_boundary()</code> have a
+<code>seed</code> argument and restore the state of the random number
+generator when a seed is given.</li>
+</ul>
+<p>Version 1.0.0 also has features without a counterpart in version
+0.1.0: a fixed control (<code>fixed_c</code> of the design functions)
+for single-arm studies compared with a known value, smaller effects as
+favorable (<code>direction</code> of the criterion functions), one
+time-to-event endpoint evaluated by the milestone survival or the hazard
+ratio (<code>design_tte()</code>, see
+<code>vignette(&quot;time-to-event&quot;)</code>) and decision boundaries
+(<code>qdm_boundary()</code>). <code>NEWS.md</code> lists all
+changes.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
