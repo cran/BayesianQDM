@@ -4,6 +4,10 @@
 #' \code{scenario_go} and the probability that the NoGo criterion is met under
 #' \code{scenario_nogo} against the threshold, with the targets (horizontal
 #' lines) and the chosen thresholds (vertical lines).
+#' \code{scenario_go} is a scenario under which a Go decision would be wrong
+#' and \code{scenario_nogo} one under which a NoGo decision would be wrong,
+#' so the legend calls the two probabilities those of a false Go and a false
+#' NoGo.
 #'
 #' The plot is a \code{ggplot} object, so it can be changed further by adding
 #' \pkg{ggplot2} functions, for example \code{ggplot2::labs()} and
@@ -42,8 +46,7 @@ plot.qdm_calibration <- function(x, col_go = "#658D1B", col_nogo = "#D91E49",
   cols <- decision_colors(col_go = col_go, col_nogo = col_nogo)
   style <- plot_style(linewidth = linewidth, base_size = base_size,
                       legend_position = legend_position)
-  labels <- c("Go criterion met under scenario_go",
-              "NoGo criterion met under scenario_nogo")
+  labels <- false_decision_labels()$legend
   long <- data.frame(
     gamma = rep(x$curve$gamma, 2L),
     prob = c(x$curve$prob_go, x$curve$prob_nogo),
@@ -55,16 +58,17 @@ plot.qdm_calibration <- function(x, col_go = "#658D1B", col_nogo = "#D91E49",
   chosen <- data.frame(x = c(x$gamma_go, x$gamma_nogo),
                        event = factor(labels, levels = labels))
   chosen <- chosen[!is.na(chosen$x), , drop = FALSE]
+  # The keys of the legend show the curves only
   ggplot2::ggplot(long, ggplot2::aes(x = .data$gamma, y = .data$prob,
                                      colour = .data$event)) +
     ggplot2::geom_hline(data = targets,
                         ggplot2::aes(yintercept = .data$y,
                                      colour = .data$event),
-                        linetype = "dashed") +
+                        linetype = "dashed", show.legend = FALSE) +
     ggplot2::geom_vline(data = chosen,
                         ggplot2::aes(xintercept = .data$x,
                                      colour = .data$event),
-                        linetype = "dotted") +
+                        linetype = "dotted", show.legend = FALSE) +
     ggplot2::geom_step(linewidth = style$linewidth) +
     ggplot2::scale_colour_manual(values = cols) +
     ggplot2::scale_y_continuous(limits = c(0, 1),

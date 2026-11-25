@@ -2,7 +2,7 @@ Package: BayesianQDM
 Type: Package
 Title: Bayesian Quantitative Decision-Making Framework for Binary,
         Continuous and Time-to-Event Endpoints
-Version: 1.0.1
+Version: 1.1.0
 Authors@R: c(
     person(given  = "Gosuke",
            family = "Homma",
@@ -17,12 +17,15 @@ Description: Bayesian quantitative decision-making for proof-of-concept
     through power priors, a concurrent, external, hypothetical or fixed
     control group, and a decision criterion based on the posterior or
     posterior predictive probability of the treatment effect. The package
-    computes the decision for observed data, the operating characteristics
-    of a design under scenarios for the true parameters, the decision
-    thresholds that control the probabilities of false Go and false NoGo
-    decisions, and the observed data that lead to each decision. One
-    or two binary endpoints (Beta-binomial and Dirichlet-multinomial
-    models), one or two continuous endpoints (Normal-Inverse-chi-squared and
+    computes the decision for observed data, the operating characteristics of
+    one or more designs under scenarios for the true parameters, the decision
+    thresholds, or the smallest sample size, for which the probabilities of
+    false Go and false NoGo decisions are at most given targets, and the
+    observed data that lead to each decision. Reports of a design and its
+    results can be written as drafts of the corresponding sections of a
+    study protocol. One or two
+    binary endpoints (Beta-binomial and Dirichlet-multinomial models), one or
+    two continuous endpoints (Normal-Inverse-chi-squared and
     Normal-Inverse-Wishart models) and one time-to-event endpoint evaluated
     by the milestone survival probability or the hazard ratio (exponential
     model with Gamma priors) are supported, with larger or smaller effects
@@ -36,9 +39,10 @@ Description: Bayesian quantitative decision-making for proof-of-concept
 License: GPL (>= 2)
 Encoding: UTF-8
 Language: en-US
-Imports: ggplot2 (>= 3.4.0), grDevices, Rcpp, stats
+Depends: R (>= 4.1.0)
+Imports: ggplot2 (>= 3.4.0), grDevices, Rcpp, stats, utils
 LinkingTo: Rcpp
-Suggests: knitr, rmarkdown, spelling, testthat (>= 3.0.0)
+Suggests: knitr, rmarkdown, spelling, testthat (>= 3.1.7)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://gosukehommaEX.github.io/BayesianQDM/,
@@ -46,9 +50,9 @@ URL: https://gosukehommaEX.github.io/BayesianQDM/,
 BugReports: https://github.com/gosukehommaEX/BayesianQDM/issues
 Config/roxygen2/version: 8.0.0
 NeedsCompilation: yes
-Packaged: 2026-10-31 07:33:17 UTC; i_lik
+Packaged: 2026-11-25 08:53:43 UTC; i_lik
 Author: Gosuke Homma [aut, cre],
   Yusuke Yamaguchi [aut]
 Maintainer: Gosuke Homma <my.name.is.gosuke@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-10-31 08:10:27 UTC
+Date/Publication: 2026-11-25 09:20:02 UTC

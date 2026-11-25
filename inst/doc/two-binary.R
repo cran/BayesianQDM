@@ -94,7 +94,7 @@ qdm_decide(des_safety, data_t = data_binary2(c(2, 1, 5, 2)),
 ## ----cellprob-----------------------------------------------------------------
 cellprob_binary2(pi1 = 0.35, pi2 = 0.35, rho = 0.3)
 
-## ----oc-----------------------------------------------------------------------
+## ----oc, fig.alt = "Heat maps of the probabilities of the decisions over the true effects on the two endpoints"----
 effects <- expand.grid(theta1 = c(0, 0.15, 0.3), theta2 = c(0, 0.15, 0.3))
 scen <- data.frame(pi_t1 = 0.2 + effects$theta1,
                    pi_t2 = 0.2 + effects$theta2, rho_t = 0.3,
@@ -103,7 +103,7 @@ oc <- qdm_oc(des, scen, seed = 1)
 oc
 plot(oc)
 
-## ----oc-overlay---------------------------------------------------------------
+## ----oc-overlay, fig.alt = c("Heat map of the most likely decision and its probability over the true effects on the two endpoints, with the probabilities in the cells", "The same heat map without the probabilities in the cells")----
 eff_wide <- expand.grid(theta1 = seq(0, 0.5, by = 0.1),
                         theta2 = seq(0, 0.5, by = 0.1))
 scen_wide <- data.frame(pi_t1 = 0.2 + eff_wide$theta1,
@@ -113,7 +113,7 @@ oc_wide <- qdm_oc(des, scen_wide, seed = 1)
 plot(oc_wide, overlay = TRUE)
 plot(oc_wide, overlay = TRUE, cell_values = FALSE)
 
-## ----calibrate----------------------------------------------------------------
+## ----calibrate, fig.alt = "Probabilities of meeting the Go and NoGo criteria against the threshold, with the targets and the chosen thresholds; the two curves are close"----
 cal <- qdm_calibrate(des, scenario_go = scen[1, ], scenario_nogo = scen[9, ],
                      target_go = 0.1, target_nogo = 0.2, seed = 1)
 cal

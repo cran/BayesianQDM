@@ -45,7 +45,7 @@ des_pred <- design_tte(
 )
 qdm_decide(des_pred, data_t = data_tte(6, 150), seed = 1)
 
-## ----oc-----------------------------------------------------------------------
+## ----oc, fig.alt = "Probabilities of the decisions against the survival probability of the treatment group at the milestone"----
 med0 <- 3 * log(2) / -log(0.72)
 med1 <- 3 * log(2) / -log(0.72 + 0.15)
 c(med0, med1)
@@ -62,19 +62,19 @@ oc_c <- qdm_oc(des_c, data.frame(median_t = c(med0, 10, 15, 20),
                                  median_c = med0), nsim = 1000, seed = 1)
 oc_c
 
-## ----calibrate----------------------------------------------------------------
+## ----boundary-----------------------------------------------------------------
+b <- qdm_boundary(des, exposure_t = seq(100, 300, by = 50))
+b
+
+## ----boundary-plot, fig.alt = "Regions of the decisions by the total observed time and the number of events of the treatment group"----
+plot(qdm_boundary(des, exposure_t = seq(20, 400, by = 5)))
+
+## ----calibrate, fig.alt = "Probabilities of meeting the Go and NoGo criteria against the threshold, with the targets and the chosen thresholds"----
 cal <- qdm_calibrate(des, scenario_go = data.frame(median_t = med0),
                      scenario_nogo = data.frame(median_t = med1),
                      target_go = 0.05, target_nogo = 0.1, seed = 1)
 cal
 plot(cal)
-
-## ----boundary-----------------------------------------------------------------
-b <- qdm_boundary(des, exposure_t = seq(100, 300, by = 50))
-b
-
-## ----boundary-plot------------------------------------------------------------
-plot(qdm_boundary(des, exposure_t = seq(20, 400, by = 5)))
 
 ## ----hr-----------------------------------------------------------------------
 crit_hr <- criterion_posterior(theta_tv = 0.67, theta_mav = 0.8,
@@ -95,7 +95,7 @@ post_c <- dec_hr$posterior_c
 phazardratio(0.67, shape_t = post_t[["shape"]], rate_t = post_t[["rate"]],
              shape_c = post_c[["shape"]], rate_c = post_c[["rate"]])
 
-## ----hr-oc--------------------------------------------------------------------
+## ----hr-oc, fig.alt = "Probabilities of the decisions against the true hazard ratio"----
 oc_hr <- qdm_oc(des_hr, data.frame(median_t = 8.5 / c(0.5, 0.6, 0.7, 0.8, 1),
                                    median_c = 8.5), seed = 1)
 oc_hr

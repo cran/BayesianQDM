@@ -19,7 +19,8 @@ qdm_boundary(
 \arguments{
 \item{design}{A design created by \code{\link{design_binary}},
 \code{\link{design_continuous}}, \code{\link{design_continuous2}} or
-\code{\link{design_tte}}.}
+\code{\link{design_tte}}, or a design specification started by
+\code{\link{qdm_endpoint}}, which is built by \code{\link{qdm_build}}.}
 
 \item{n_t}{Numbers of subjects in the treatment group (whole numbers); by
 default that of the design. Several values are allowed for one binary
@@ -180,7 +181,10 @@ plot(b2)
 \seealso{
 Other operations:
 \code{\link[=qdm_calibrate]{qdm_calibrate()}},
+\code{\link[=qdm_compare]{qdm_compare()}},
 \code{\link[=qdm_decide]{qdm_decide()}},
-\code{\link[=qdm_oc]{qdm_oc()}}
+\code{\link[=qdm_find_n]{qdm_find_n()}},
+\code{\link[=qdm_oc]{qdm_oc()}},
+\code{\link[=qdm_scenarios]{qdm_scenarios()}}
 }
 \concept{operations}

@@ -62,8 +62,12 @@ Specifies a proof-of-concept study with two continuous endpoints: the
 sample sizes, the prior distributions, the external data, the form of the
 control group, the decision criterion for two endpoints and the method
 used to compute the probabilities. The design is used by
-\code{\link{qdm_decide}}, \code{\link{qdm_oc}} and
-\code{\link{qdm_calibrate}}.
+\code{\link{qdm_decide}}, \code{\link{qdm_oc}}, \code{\link{qdm_compare}},
+\code{\link{qdm_calibrate}}, \code{\link{qdm_find_n}},
+\code{\link{qdm_boundary}} and \code{\link{qdm_scenarios}}, and
+\code{\link{show_report}} and \code{\link{show_code}} write it as a report
+and as R code; the design steps (see \code{\link{qdm_endpoint}}) change one
+part of it.
 }
 \details{
 The responses of a subject on the two endpoints have a bivariate normal
@@ -90,7 +94,7 @@ location \eqn{\mu_n} and scale matrix
 the mean of \eqn{m} future subjects has the same distribution with the
 scale matrix \eqn{(1 / \kappa_n + 1 / m) \Lambda_n / (\nu_n - 1)},
 because the future subjects share the same mean and covariance matrix
-(version 0.1.0 and Yamaguchi et al. used the scale matrix
+(version 0.1.0 used the scale matrix
 \eqn{(1 + \kappa_n) \Lambda_n / (\kappa_n (\nu_n - 1) m)}, which treats
 them as independent draws from the predictive distribution of one
 subject). A hypothetical control (\code{hypothetical(mean = c(m1, m2),
@@ -112,9 +116,9 @@ The probabilities of the regions are computed by one of two methods:
 approximated by a bivariate t distribution with the same mean,
 covariance matrix and radial fourth moment (Yamaguchi, Homma, Takeda
 and Maruo, submitted, Theorem 3), whose rectangle
-probabilities are computed by numerical integration for real degrees
-of freedom. It requires more than 4 degrees of freedom for both
-groups and is the fastest method.}
+probabilities are computed by numerical integration, also for
+non-integer degrees of freedom. It requires more than 4 degrees of
+freedom for both groups and is the fastest method.}
 \item{\code{"MC"}}{Monte Carlo simulation with \code{nMC} draws from
 each distribution; the probabilities of all regions are estimated
 from the same draws. The computing time is proportional to

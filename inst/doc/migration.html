@@ -348,7 +348,9 @@ version 1.0.0, a study is described by small specification objects that
 are combined into a design, and three functions work with any design.
 This vignette shows how to translate code written for version 0.1.0 and
 lists the changes in the results. The code for version 0.1.0 is shown
-but not run.</p>
+but not run. Version 1.1.0 adds the design steps used with the pipe (see
+<code>vignette(&quot;pipe&quot;)</code>), <code>qdm_compare()</code> and
+<code>qdm_find_n()</code> (see <code>vignette(&quot;planning&quot;)</code>).</p>
 <div id="correspondence-of-the-functions" class="section level2">
 <h2>Correspondence of the functions</h2>
 <table>
@@ -359,7 +361,7 @@ but not run.</p>
 <thead>
 <tr class="header">
 <th>Version 0.1.0</th>
-<th>Version 1.0.0</th>
+<th>Version 1.0.0 and later</th>
 </tr>
 </thead>
 <tbody>
@@ -416,7 +418,7 @@ but not run.</p>
 <thead>
 <tr class="header">
 <th>Version 0.1.0</th>
-<th>Version 1.0.0</th>
+<th>Version 1.0.0 and later</th>
 </tr>
 </thead>
 <tbody>
@@ -498,9 +500,12 @@ endpoints</td>
 </tr>
 </tbody>
 </table>
-<p>The meaning of <code>gamma_nogo</code> is unchanged: the NoGo
-criterion is <span class="math inline">\(\Pr(\theta \le \theta_{MAV}
-\mid D) \ge \gamma_{nogo}\)</span>.</p>
+<p>The meaning of <code>gamma_nogo</code> is unchanged: in both
+versions, the NoGo criterion is <span class="math inline">\(\Pr(\theta
+\le \theta_{MAV} \mid D) \ge \gamma_{nogo}\)</span>, so its value is
+carried over as it is (the threshold <span class="math inline">\(\gamma_2\)</span> of Kang et al. (2026)
+corresponds to <code>1 - gamma_nogo</code>; see
+<code>vignette(&quot;overview&quot;)</code>).</p>
 </div>
 <div id="posterior-probability-for-observed-data" class="section level2">
 <h2>Posterior probability for observed data</h2>
@@ -661,9 +666,10 @@ its scale uses the same denominator (version 0.1.0 used <span class="math inline
 <li>For two binary endpoints, the predictive probabilities are computed
 exactly instead of by Monte Carlo simulation.</li>
 <li>For two continuous endpoints, the moment-matching approximation uses
-the real degrees of freedom (version 0.1.0 rounded them to an integer),
-and with Monte Carlo simulation each simulated study has its own draws
-(version 0.1.0 used the same draws for all simulated studies).</li>
+the non-integer degrees of freedom without rounding (version 0.1.0
+rounded them to an integer), and with Monte Carlo simulation each
+simulated study has its own draws (version 0.1.0 used the same draws for
+all simulated studies).</li>
 <li>Numerical integration for one continuous endpoint covers the whole
 real line (version 0.1.0 truncated the range).</li>
 <li>Probabilities are no longer set to 0 below

@@ -71,21 +71,21 @@ pbetabinomdiff(0, m_t = 40, a_t = post_t[["a"]], b_t = post_t[["b"]],
                m_c = 40, a_c = post_c[["a"]], b_c = post_c[["b"]],
                lower.tail = FALSE)
 
-## ----oc-----------------------------------------------------------------------
+## ----oc, fig.alt = "Probabilities of the decisions against the true difference in response rates"----
 oc <- qdm_oc(des, data.frame(pi_t = seq(0.2, 0.8, by = 0.05), pi_c = 0.2))
 oc
 plot(oc)
 
-## ----oc-hyp-------------------------------------------------------------------
+## ----oc-hyp, fig.alt = "Probabilities of the decisions against the true response rate of the treatment group, with a hypothetical control"----
 oc_hyp <- qdm_oc(des_hyp, data.frame(pi_t = seq(0.2, 0.8, by = 0.05)))
 plot(oc_hyp)
 
-## ----boundary-----------------------------------------------------------------
+## ----boundary, fig.alt = "Regions of the decisions by the numbers of control and treatment responders"----
 b <- qdm_boundary(des)
 b
 plot(b)
 
-## ----boundary-fixed-----------------------------------------------------------
+## ----boundary-fixed, fig.alt = "Regions of the decisions by the sample size and the number of responders of the treatment group, with a fixed control"----
 b_fix <- qdm_boundary(des_fix, n_t = seq(10, 40, by = 5))
 b_fix
 plot(b_fix)
@@ -106,12 +106,12 @@ pbetadiff(-0.1, a_t = post_t[["a"]], b_t = post_t[["b"]],
 pbetadiff(0, a_t = post_t[["a"]], b_t = post_t[["b"]],
           a_c = post_c[["a"]], b_c = post_c[["b"]], lower.tail = FALSE)
 
-## ----safety-oc----------------------------------------------------------------
+## ----safety-oc, fig.alt = "Probabilities of the decisions against the true difference in the rates of an adverse event"----
 plot(qdm_oc(des_ae, data.frame(pi_t = seq(0.1, 0.6, by = 0.05),
                                pi_c = 0.4)))
 qdm_boundary(des_ae)
 
-## ----calibrate----------------------------------------------------------------
+## ----calibrate, fig.alt = "Probabilities of meeting the Go and NoGo criteria against the threshold, with the targets and the chosen thresholds"----
 cal <- qdm_calibrate(des,
                      scenario_go = data.frame(pi_t = 0.2, pi_c = 0.2),
                      scenario_nogo = data.frame(pi_t = 0.5, pi_c = 0.2),

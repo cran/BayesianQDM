@@ -51,7 +51,7 @@ des_fix <- design_continuous2(
 dec_fix <- qdm_decide(des_fix, data_t = data_t)
 dec_fix
 
-## ----oc-----------------------------------------------------------------------
+## ----oc, fig.alt = "Heat maps of the probabilities of the decisions over the true effects on the two endpoints"----
 effects <- expand.grid(theta1 = c(0, 10, 20), theta2 = c(0, 2, 4))
 scen <- data.frame(mu_t1 = -10 + effects$theta1,
                    mu_t2 = -1 + effects$theta2, sd_t1 = 80, sd_t2 = 6,
@@ -61,7 +61,7 @@ oc <- qdm_oc(des, scen, nsim = 1000, seed = 1)
 oc
 plot(oc)
 
-## ----oc-overlay---------------------------------------------------------------
+## ----oc-overlay, fig.alt = "Heat map of the most likely decision and its probability over the true effects on the two endpoints, with the probabilities in the cells"----
 eff_wide <- expand.grid(theta1 = seq(0, 40, by = 10),
                         theta2 = seq(0, 8, by = 2))
 scen_wide <- data.frame(mu_t1 = -10 + eff_wide$theta1,
@@ -74,13 +74,13 @@ plot(qdm_oc(des, scen_wide, nsim = 1000, seed = 1), overlay = TRUE)
 qdm_boundary(des, mean_t = list(c(0, 10, 20, 30), seq(-3, 7, by = 0.25)),
              cov_t = data_t$cov, data_c = data_c)
 
-## ----boundary-----------------------------------------------------------------
+## ----boundary, fig.alt = "Regions of the decisions by the observed differences in means of the two endpoints"----
 b <- qdm_boundary(des, mean_t = list(seq(-30, 50, by = 2),
                                      seq(-3, 7, by = 0.25)),
                   cov_t = data_t$cov, data_c = data_c)
 plot(b)
 
-## ----calibrate----------------------------------------------------------------
+## ----calibrate, fig.alt = "Probabilities of meeting the Go and NoGo criteria against the threshold, with the targets and the chosen thresholds"----
 cal <- qdm_calibrate(des, scenario_go = scen[1, ], scenario_nogo = scen[9, ],
                      target_go = 0.1, target_nogo = 0.2, nsim = 1000,
                      seed = 1)

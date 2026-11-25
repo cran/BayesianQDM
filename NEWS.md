@@ -1,3 +1,77 @@
+# BayesianQDM 1.1.0
+
+* A design can be built step by step, for example with the native pipe
+  `|>` of R. `qdm_endpoint()` starts a design specification for an
+  endpoint, and `qdm_sample_size()`, `qdm_prior()`, `qdm_criterion()`,
+  `qdm_external()`, `qdm_control()`, `qdm_tte()` and `qdm_computation()` set
+  the arguments of the `design_*()` function of the endpoint. `qdm_build()`
+  creates the design with that function, so the design and the error
+  messages are the same as when the function is called directly.
+  `qdm_decide()`, `qdm_oc()`, `qdm_compare()`, `qdm_calibrate()`,
+  `qdm_find_n()`, `qdm_boundary()` and `qdm_scenarios()` accept a
+  specification in place of a design and build it, and `show_report()` and
+  `show_code()` accept it as well. Apart from the default `grid` of
+  `qdm_calibrate()` and the legends of the plots of its results (see
+  below), the functions of version 1.0.1 give the same results.
+* `show_report()` writes a design or a design specification, or a result of
+  `qdm_oc()`, `qdm_calibrate()`, `qdm_find_n()`, `qdm_boundary()` or
+  `qdm_decide()`, as a report in HTML or plain text: the study design, the
+  statistical model and the prior distributions, the decision criteria with
+  their formulas in LaTeX, the computation of the probabilities and the
+  result, as a draft of the corresponding sections of a study protocol. It
+  can end a pipe.
+* The design steps also accept a design created by a `design_*()`
+  function: it is converted to the specification that builds it, so that
+  one part of a design can be changed, for example
+  `design_binary(...) |> qdm_sample_size(n_t = 20, n_c = 20)`. `qdm_build()`
+  returns a design given to it unchanged.
+* `qdm_scenarios()` creates the data frame of scenarios with the columns
+  that a design needs, from the values of the columns or from the treatment
+  effects (`theta`); `theta = "thresholds"` gives the scenarios of no
+  effect, the minimum acceptable value and the target value.
+* `qdm_compare()` computes the operating characteristics of several designs
+  under the same scenarios in one table, with `print()` and `plot()`
+  methods.
+* `qdm_find_n()` finds the smallest candidate sample size for which the
+  probabilities of meeting the Go criterion under one scenario and the NoGo
+  criterion under another are at most given targets, with the thresholds
+  fixed (the counterpart of `qdm_calibrate()`). Because the probabilities
+  of a binary endpoint are not monotone in the sample size, it also gives
+  the smallest candidate from which all larger candidates meet the targets.
+  The result has `format()`, `print()`, `plot()` and `as.data.frame()`
+  methods and is reported by `show_report()`.
+* `plot()` of a result of `qdm_decide()` shows the posterior density of the
+  treatment effect with the Go and NoGo regions (one endpoint, posterior
+  criterion), the predictive probabilities with their thresholds (one
+  endpoint, predictive criterion), or the probabilities of the regions of
+  two endpoints.
+* `as.data.frame()` converts a result of `qdm_decide()`, `qdm_calibrate()`
+  or `qdm_find_n()` to a data frame with one row, so that results can be
+  combined with `rbind()`.
+* The legends of the plots of the results of `qdm_calibrate()` and
+  `qdm_find_n()` read "False Go (Go criterion met when Go would be wrong)"
+  and "False NoGo (NoGo criterion met when NoGo would be wrong)" instead of
+  naming the arguments `scenario_go` and `scenario_nogo`, the scenarios
+  under which a Go and a NoGo decision would be wrong. The reports of
+  `show_report()` label the two scenarios "Go would be wrong" and "NoGo
+  would be wrong".
+* `show_code()` writes the R code that creates a design, as a pipe of the
+  design steps or as a call of the `design_*()` function, and
+  `show_report(code = TRUE)` adds it to the end of a report.
+* The default `grid` of `qdm_calibrate()` is `(1:99) / 100`, so that the
+  chosen thresholds are the numbers written with two decimals (for example
+  0.7, where `seq(0.01, 0.99, by = 0.01)` gave 0.7000000000000001), as
+  `show_code()` writes them.
+* The validation also computes Supplemental Tables 3 and 4 of Kang et al.
+  (2026), which compare sample sizes, with `qdm_compare()`.
+* New vignettes: `vignette("pipe")` shows designs and analyses built with
+  the pipe and the reports of `show_report()`, and `vignette("planning")`
+  shows the scenarios, the comparison of designs, the search for the sample
+  size, tables of results, the plot of a decision and the R code of a
+  design.
+* The package depends on R (>= 4.1.0), the first version with the native
+  pipe, which the examples and the vignettes use.
+
 # BayesianQDM 1.0.1
 
 * The C++ code for two continuous endpoints no longer calls `std::sort()` on

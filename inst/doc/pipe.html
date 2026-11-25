@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Working with the pipe</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Working with the pipe</h1>
+
+
+
+<p>This vignette shows how to build a design step by step with the
+native pipe, how to go on to the results and how to write a report for a
+study protocol.</p>
+<div id="designs-built-step-by-step" class="section level2">
+<h2>Designs built step by step</h2>
+<p>The native pipe <code>|&gt;</code> of R (version 4.1.0 or later)
+passes the result of one function to the first argument of the next. In
+BayesianQDM, <code>qdm_endpoint()</code> starts a design specification
+for an endpoint, and each of the other steps sets some arguments of the
+<code>design_*()</code> function of the endpoint:</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Arguments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>qdm_sample_size()</code></td>
+<td><code>n_t</code>, <code>n_c</code></td>
+</tr>
+<tr class="even">
+<td><code>qdm_prior()</code></td>
+<td><code>prior_t</code>, <code>prior_c</code></td>
+</tr>
+<tr class="odd">
+<td><code>qdm_criterion()</code></td>
+<td><code>criterion</code></td>
+</tr>
+<tr class="even">
+<td><code>qdm_external()</code></td>
+<td><code>external_t</code>, <code>external_c</code></td>
+</tr>
+<tr class="odd">
+<td><code>qdm_control()</code></td>
+<td><code>hypothetical_c</code>, <code>fixed_c</code></td>
+</tr>
+<tr class="even">
+<td><code>qdm_tte()</code></td>
+<td><code>milestone</code>, <code>effect</code>, <code>conduct</code>,
+<code>conduct_future</code> (time-to-event endpoint)</td>
+</tr>
+<tr class="odd">
+<td><code>qdm_computation()</code></td>
+<td><code>method</code>, <code>nMC</code>, <code>enumerate</code></td>
+</tr>
+</tbody>
+</table>
+<p>A specification can be printed at any step. Until the required
+arguments are set, it lists those still needed:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>spec <span class="ot">&lt;-</span> <span class="fu">qdm_endpoint</span>(<span class="st">&quot;binary&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="fu">qdm_sample_size</span>(<span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>spec</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt; Design specification: one binary endpoint (incomplete)</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt;   Arguments set: n_t, n_c</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt;   Still needed: the prior distributions (qdm_prior()), the decision criterion (qdm_criterion())</span></span></code></pre></div>
+<p>Once the sample sizes, the prior distribution of the treatment group
+and the decision criterion are set, it describes the design:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>spec <span class="ot">&lt;-</span> spec <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">qdm_prior</span>(<span class="at">prior_t =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>            <span class="at">prior_c =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="fu">qdm_criterion</span>(<span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.2</span>, <span class="at">theta_mav =</span> <span class="fl">0.1</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>                                    <span class="at">gamma_go =</span> <span class="fl">0.5</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.8</span>))</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>spec</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; Design specification (complete):</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; Design: one binary endpoint</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;   Treatment: n = 12, prior Beta(a = 0.5, b = 0.5)</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;   Control: concurrent, n = 12, prior Beta(a = 0.5, b = 0.5)</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; Posterior probability criterion</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.2 | data) &gt;= 0.5</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0.1 | data) &gt;= 0.8</span></span></code></pre></div>
+<p>The steps only store their arguments. <code>qdm_build()</code>
+creates the design by calling <code>design_binary()</code>, which checks
+the arguments, so the design is the same as when
+<code>design_binary()</code> is called directly:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>des <span class="ot">&lt;-</span> <span class="fu">design_binary</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">n_t =</span> <span class="dv">12</span>, <span class="at">n_c =</span> <span class="dv">12</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">prior_t =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>), <span class="at">prior_c =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.2</span>, <span class="at">theta_mav =</span> <span class="fl">0.1</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                                  <span class="at">gamma_go =</span> <span class="fl">0.5</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.8</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">identical</span>(<span class="fu">qdm_build</span>(spec), des)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>An invalid argument gives the error of <code>design_binary()</code>
+when the design is built:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">try</span>(spec <span class="sc">|&gt;</span> <span class="fu">qdm_sample_size</span>(<span class="at">n_t =</span> <span class="dv">0</span>, <span class="at">n_c =</span> <span class="dv">12</span>) <span class="sc">|&gt;</span> <span class="fu">qdm_build</span>())</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; Error : &#39;n_t&#39; must be at least 1.</span></span></code></pre></div>
+</div>
+<div id="from-the-design-to-the-results" class="section level2">
+<h2>From the design to the results</h2>
+<p><code>qdm_decide()</code>, <code>qdm_oc()</code>,
+<code>qdm_compare()</code>, <code>qdm_calibrate()</code>,
+<code>qdm_find_n()</code> and <code>qdm_boundary()</code> accept a
+specification in place of a design and build it, and their results can
+be passed on to <code>plot()</code>. The decision for 9 responders of 12
+subjects in the treatment group and 4 of 12 in the control group is</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">qdm_decide</span>(<span class="at">data_t =</span> <span class="fu">data_binary</span>(<span class="dv">12</span>, <span class="dv">9</span>), <span class="at">data_c =</span> <span class="fu">data_binary</span>(<span class="dv">12</span>, <span class="dv">4</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.2 | data) = 0.8517 (threshold 0.5, met)</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0.1 | data) = 0.05935 (threshold 0.8, not met)</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;   Treatment: Beta(a = 9.5, b = 3.5)</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;   Control:   Beta(a = 4.5, b = 8.5)</span></span></code></pre></div>
+<p>The operating characteristics for true response rates of the
+treatment group from 0.3 to 0.7, with a control response rate of 0.3,
+are</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>scen <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">pi_t =</span> <span class="fu">seq</span>(<span class="fl">0.3</span>, <span class="fl">0.7</span>, <span class="at">by =</span> <span class="fl">0.05</span>), <span class="at">pi_c =</span> <span class="fl">0.3</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="fu">qdm_oc</span>(scen) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="fu">plot</span>()</span></code></pre></div>
+<p><img role="img" aria-label="Probabilities of the decisions against the true difference in response rates" src="data:image/png;base64,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" alt="Probabilities of the decisions against the true difference in response rates" /></p>
+<p>The thresholds can be calibrated so that the probability of meeting
+the Go criterion is at most 0.05 when the treatment has no effect, and
+that of meeting the NoGo criterion is at most 0.2 when the effect is
+0.3:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>cal <span class="ot">&lt;-</span> spec <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="fu">qdm_calibrate</span>(<span class="at">scenario_go =</span> <span class="fu">data.frame</span>(<span class="at">pi_t =</span> <span class="fl">0.3</span>, <span class="at">pi_c =</span> <span class="fl">0.3</span>),</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>                <span class="at">scenario_nogo =</span> <span class="fu">data.frame</span>(<span class="at">pi_t =</span> <span class="fl">0.6</span>, <span class="at">pi_c =</span> <span class="fl">0.3</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>                <span class="at">target_go =</span> <span class="fl">0.05</span>, <span class="at">target_nogo =</span> <span class="fl">0.2</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>cal</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; Calibration of the decision thresholds (exact enumeration of the outcomes)</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;   gamma_go   = 0.74: P(Go criterion met | scenario_go) = 0.03587 (target 0.05)</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;   gamma_nogo = 0.39: P(NoGo criterion met | scenario_nogo) = 0.182 (target 0.2)</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Decision probabilities with the chosen thresholds</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;       scenario pi_t pi_c      Go   NoGo   Gray Miss</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;    scenario_go  0.3  0.3 0.03587 0.7486 0.2155    0</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;  scenario_nogo  0.6  0.3 0.36483 0.1820 0.4531    0</span></span></code></pre></div>
+<p>The calibrated thresholds are <span class="math inline">\(\gamma_{go}
+=\)</span> 0.74 and <span class="math inline">\(\gamma_{nogo} =\)</span>
+0.39, and <code>cal$design</code> is the design with these thresholds,
+which can start another pipe:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>cal<span class="sc">$</span>design <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="fu">qdm_decide</span>(<span class="at">data_t =</span> <span class="fu">data_binary</span>(<span class="dv">12</span>, <span class="dv">9</span>), <span class="at">data_c =</span> <span class="fu">data_binary</span>(<span class="dv">12</span>, <span class="dv">4</span>))</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.2 | data) = 0.8517 (threshold 0.74, met)</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0.1 | data) = 0.05935 (threshold 0.39, not met)</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt;   Treatment: Beta(a = 9.5, b = 3.5)</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt;   Control:   Beta(a = 4.5, b = 8.5)</span></span></code></pre></div>
+<p>The observed data that lead to each decision are</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="fu">qdm_boundary</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="fu">plot</span>()</span></code></pre></div>
+<p><img role="img" aria-label="Regions of the decisions by the numbers of control and treatment responders" src="data:image/png;base64,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" alt="Regions of the decisions by the numbers of control and treatment responders" /></p>
+</div>
+<div id="changing-one-step" class="section level2">
+<h2>Changing one step</h2>
+<p>A step given again sets all its arguments anew (an argument that is
+not given returns to its default), so a specification can be the start
+of several pipes that change one of its parts. For example, the
+probabilities of a Go decision with no effect (<span class="math inline">\(\pi_t = \pi_c = 0.2\)</span>) and with an effect
+of 0.3 (<span class="math inline">\(\pi_t = 0.5\)</span>), for sample
+sizes from 12 to 30 per group, are</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>scen2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">pi_t =</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.5</span>), <span class="at">pi_c =</span> <span class="fl">0.2</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">12</span>, <span class="dv">18</span>, <span class="dv">24</span>, <span class="dv">30</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>go <span class="ot">&lt;-</span> <span class="fu">vapply</span>(n, <span class="cf">function</span>(k) {</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  oc <span class="ot">&lt;-</span> spec <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>    <span class="fu">qdm_sample_size</span>(<span class="at">n_t =</span> k, <span class="at">n_c =</span> k) <span class="sc">|&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>    <span class="fu">qdm_oc</span>(scen2)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  oc<span class="sc">$</span>Go</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>}, <span class="fu">numeric</span>(<span class="dv">2</span>))</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">n =</span> n, <span class="at">no_effect =</span> go[<span class="dv">1</span>, ], <span class="at">effect =</span> go[<span class="dv">2</span>, ])</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt;    n  no_effect    effect</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt; 1 12 0.09840322 0.6947283</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt; 2 18 0.07088178 0.7602799</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; 3 24 0.03782211 0.8044900</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; 4 30 0.01759145 0.7638057</span></span></code></pre></div>
+<p>With 30 subjects per group, the probability of a Go decision is 0.76
+with the effect of 0.3 and 0.018 with no effect, against 0.69 and 0.098
+with 12 subjects per group. With the effect, the probability is lower
+with 30 than with 24 subjects per group (0.80), because the outcomes of
+a binary endpoint are discrete and the probabilities do not increase
+steadily with the sample size (see
+<code>vignette(&quot;planning&quot;)</code>).</p>
+<p>A design created by a <code>design_*()</code> function can also start
+such a pipe: it is converted to the specification that builds it.
+<code>qdm_compare()</code> computes the operating characteristics of
+several designs in one table, and <code>qdm_find_n()</code> searches for
+the sample size (see <code>vignette(&quot;planning&quot;)</code>):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>designs <span class="ot">&lt;-</span> <span class="fu">lapply</span>(n, <span class="cf">function</span>(k) <span class="fu">qdm_sample_size</span>(des, <span class="at">n_t =</span> k, <span class="at">n_c =</span> k))</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">names</span>(designs) <span class="ot">&lt;-</span> <span class="fu">paste</span>(n, <span class="st">&quot;per group&quot;</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="fu">qdm_compare</span>(designs, scen2)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#&gt; Operating characteristics of 4 designs</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; Method: exact enumeration of the outcomes</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co">#&gt;        design pi_t pi_c      Go     NoGo   Gray Miss</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt;  12 per group  0.2  0.2 0.09840 0.445168 0.4564    0</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt;  12 per group  0.5  0.2 0.69473 0.034644 0.2706    0</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt;  18 per group  0.2  0.2 0.07088 0.453342 0.4758    0</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt;  18 per group  0.5  0.2 0.76028 0.016321 0.2234    0</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt;  24 per group  0.2  0.2 0.03782 0.537005 0.4252    0</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt;  24 per group  0.5  0.2 0.80449 0.008514 0.1870    0</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt;  30 per group  0.2  0.2 0.01759 0.565827 0.4166    0</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt;  30 per group  0.5  0.2 0.76381 0.005797 0.2304    0</span></span></code></pre></div>
+<p>External control data borrowed through a power prior:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="fu">qdm_external</span>(<span class="at">external_c =</span> <span class="fu">borrow</span>(<span class="fu">data_binary</span>(<span class="at">n =</span> <span class="dv">40</span>, <span class="at">y =</span> <span class="dv">8</span>), <span class="at">a0 =</span> <span class="fl">0.5</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">qdm_oc</span>(scen2)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt; Operating characteristics (exact enumeration of the outcomes)</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;  pi_t pi_c      Go    NoGo   Gray Miss</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;   0.2  0.2 0.05791 0.49764 0.4444    0</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;   0.5  0.2 0.72467 0.01883 0.2565    0</span></span></code></pre></div>
+<p>A criterion based on the posterior predictive probability of the
+effect that will be observed in a future study with 50 subjects per
+group:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="fu">qdm_criterion</span>(<span class="fu">criterion_predictive</span>(<span class="at">theta_null =</span> <span class="fl">0.1</span>, <span class="at">m_t =</span> <span class="dv">50</span>, <span class="at">m_c =</span> <span class="dv">50</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>                                     <span class="at">gamma_go =</span> <span class="fl">0.8</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.8</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="fu">qdm_decide</span>(<span class="at">data_t =</span> <span class="fu">data_binary</span>(<span class="dv">12</span>, <span class="dv">9</span>), <span class="at">data_c =</span> <span class="fu">data_binary</span>(<span class="dv">12</span>, <span class="dv">4</span>))</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt;   Go:   P(future theta &gt; 0.1 | data) = 0.9123 (threshold 0.8, met)</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(future theta &lt;= 0.1 | data) = 0.08771 (threshold 0.8, not met)</span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt;   Treatment: Beta(a = 9.5, b = 3.5)</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt;   Control:   Beta(a = 4.5, b = 8.5)</span></span></code></pre></div>
+<p>A single-arm study of 20 subjects compared with a fixed control
+response rate of 0.2, for which the control group has no prior
+distribution:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="fu">qdm_sample_size</span>(<span class="at">n_t =</span> <span class="dv">20</span>, <span class="at">n_c =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="fu">qdm_prior</span>(<span class="at">prior_t =</span> <span class="fu">prior_beta</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="fu">qdm_control</span>(<span class="at">fixed_c =</span> <span class="fl">0.2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  <span class="fu">qdm_decide</span>(<span class="at">data_t =</span> <span class="fu">data_binary</span>(<span class="dv">20</span>, <span class="dv">9</span>))</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &gt; 0.2 | data) = 0.6798 (threshold 0.5, met)</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &lt;= 0.1 | data) = 0.07527 (threshold 0.8, not met)</span></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="co">#&gt;   Treatment: Beta(a = 9.5, b = 11.5)</span></span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a><span class="co">#&gt;   Control:   fixed value 0.2</span></span></code></pre></div>
+</div>
+<div id="other-endpoints" class="section level2">
+<h2>Other endpoints</h2>
+<p>The steps are the same for every endpoint.
+<code>qdm_computation()</code> sets the method of computation of the
+probabilities, for example the moment-matching approximation for one
+continuous endpoint:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">qdm_endpoint</span>(<span class="st">&quot;continuous&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="fu">qdm_sample_size</span>(<span class="at">n_t =</span> <span class="dv">15</span>, <span class="at">n_c =</span> <span class="dv">15</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="fu">qdm_prior</span>(<span class="at">prior_t =</span> <span class="fu">prior_vague</span>(), <span class="at">prior_c =</span> <span class="fu">prior_vague</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="fu">qdm_criterion</span>(<span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="dv">30</span>, <span class="at">theta_mav =</span> <span class="dv">15</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>                                    <span class="at">gamma_go =</span> <span class="fl">0.6</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.7</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  <span class="fu">qdm_computation</span>(<span class="at">method =</span> <span class="st">&quot;MM&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>  <span class="fu">qdm_oc</span>(<span class="fu">data.frame</span>(<span class="at">mu_t =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">20</span>, <span class="dv">40</span>), <span class="at">sd_t =</span> <span class="dv">25</span>, <span class="at">mu_c =</span> <span class="dv">0</span>, <span class="at">sd_c =</span> <span class="dv">25</span>),</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>         <span class="at">nsim =</span> <span class="dv">2000</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="co">#&gt; Operating characteristics (simulation of 2000 studies; probabilities by moment-matching approximation)</span></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="co">#&gt;  mu_t sd_t mu_c sd_c    Go   NoGo   Gray Miss</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co">#&gt;     0   25    0   25 0.000 0.8545 0.1455    0</span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="co">#&gt;    20   25    0   25 0.098 0.1450 0.7570    0</span></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co">#&gt;    40   25    0   25 0.789 0.0000 0.2110    0</span></span></code></pre></div>
+<p><code>qdm_tte()</code> sets the arguments specific to a time-to-event
+endpoint, here the hazard ratio as the effect measure, for which smaller
+effects are favorable:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">qdm_endpoint</span>(<span class="st">&quot;tte&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="fu">qdm_sample_size</span>(<span class="at">n_t =</span> <span class="dv">30</span>, <span class="at">n_c =</span> <span class="dv">30</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="fu">qdm_prior</span>(<span class="at">prior_t =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>), <span class="at">prior_c =</span> <span class="fu">prior_gamma</span>(<span class="fl">0.1</span>, <span class="dv">1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>  <span class="fu">qdm_criterion</span>(<span class="fu">criterion_posterior</span>(<span class="at">theta_tv =</span> <span class="fl">0.67</span>, <span class="at">theta_mav =</span> <span class="fl">0.8</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>                                    <span class="at">gamma_go =</span> <span class="fl">0.5</span>, <span class="at">gamma_nogo =</span> <span class="fl">0.6</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>                                    <span class="at">direction =</span> <span class="st">&quot;less&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>  <span class="fu">qdm_tte</span>(<span class="at">effect =</span> <span class="st">&quot;hazard_ratio&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>  <span class="fu">qdm_decide</span>(<span class="at">data_t =</span> <span class="fu">data_tte</span>(<span class="at">events =</span> <span class="dv">12</span>, <span class="at">exposure =</span> <span class="dv">300</span>),</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>             <span class="at">data_c =</span> <span class="fu">data_tte</span>(<span class="at">events =</span> <span class="dv">20</span>, <span class="at">exposure =</span> <span class="dv">260</span>))</span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co">#&gt; Decision: Go</span></span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="co">#&gt;   Go:   P(theta &lt; 0.67 | data) = 0.7633 (threshold 0.5, met)</span></span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co">#&gt;   NoGo: P(theta &gt;= 0.8 | data) = 0.113 (threshold 0.6, not met)</span></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a><span class="co">#&gt; Posterior distributions</span></span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a><span class="co">#&gt;   Treatment: hazard ~ Gamma(shape = 12.1, rate = 301)</span></span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a><span class="co">#&gt;   Control:   hazard ~ Gamma(shape = 20.1, rate = 261)</span></span></code></pre></div>
+</div>
+<div id="reports-for-a-study-protocol" class="section level2">
+<h2>Reports for a study protocol</h2>
+<p><code>show_report()</code> can end a pipe. It writes the design, and
+the result passed to it, as a draft of the corresponding sections of a
+study protocol: the study design, the statistical model, the decision
+criteria with their formulas, the computation of the probabilities and
+the result. The report is an HTML file (<code>file_type = &quot;html&quot;</code>,
+the default), whose formulas are displayed by MathJax, or a plain text
+file in Markdown format with the formulas in LaTeX
+(<code>file_type = &quot;text&quot;</code>). It is written in a temporary file
+unless <code>file</code> is given, and it is shown when R is used
+interactively (<code>open</code>). Here the text report of the operating
+characteristics is printed:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>  <span class="fu">qdm_oc</span>(scen2) <span class="sc">|&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="fu">show_report</span>(<span class="at">file_type =</span> <span class="st">&quot;text&quot;</span>, <span class="at">open =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co">#&gt; # Decision criteria and operating characteristics</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co">#&gt; ## Study design</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co">#&gt; The proof-of-concept study has one binary endpoint and will enroll 12 subjects in the treatment group and 12 subjects in the control group.</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="co">#&gt; ## Statistical model</span></span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co">#&gt; The number of responders among the $n_k$ subjects of group $k$ ($k = t, c$ for the treatment and control groups) follows a binomial distribution with response rate $\pi_k$, and the treatment effect is the difference in response rates, $\theta = \pi_t - \pi_c$.</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co">#&gt; The prior distribution of the treatment group is $\pi_t \sim \textrm{Beta}(0.5, 0.5)$. The prior distribution of the control group is $\pi_c \sim \textrm{Beta}(0.5, 0.5)$. The posterior distributions have closed forms.</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="co">#&gt; ## Decision criteria</span></span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a><span class="co">#&gt; The decision will be based on the posterior probability of the treatment effect $\theta$ given the data $D$ of the study, with the target value $\theta_{TV} = 0.2$ and the minimum acceptable value $\theta_{MAV} = 0.1$.</span></span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="co">#&gt; - Go criterion: $\Pr(\theta &gt; 0.2 \mid D) \ge 0.5$</span></span>
+<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a><span class="co">#&gt; - NoGo criterion: $\Pr(\theta \le 0.1 \mid D) \ge 0.8$</span></span>
+<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-23"><a href="#cb17-23" tabindex="-1"></a><span class="co">#&gt; The decision will be Go if only the Go criterion is met, NoGo if only the NoGo criterion is met, and Gray if neither is met; if both are met, the decision is called Miss. Because $\gamma_{go} + \gamma_{nogo} &gt; 1$, the two criteria cannot both be met.</span></span>
+<span id="cb17-24"><a href="#cb17-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-25"><a href="#cb17-25" tabindex="-1"></a><span class="co">#&gt; ## Computation of the probabilities</span></span>
+<span id="cb17-26"><a href="#cb17-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a><span class="co">#&gt; The probabilities of the decision criteria are computed by numerical integration.</span></span>
+<span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a><span class="co">#&gt; ## Operating characteristics</span></span>
+<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a><span class="co">#&gt; The probabilities of Go, NoGo, Gray and Miss decisions under scenarios for the true parameters (exact enumeration of the outcomes) are as follows.</span></span>
+<span id="cb17-32"><a href="#cb17-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-33"><a href="#cb17-33" tabindex="-1"></a><span class="co">#&gt; | $\pi_t$ | $\pi_c$ | Go | NoGo | Gray | Miss |</span></span>
+<span id="cb17-34"><a href="#cb17-34" tabindex="-1"></a><span class="co">#&gt; |---|---|---|---|---|---|</span></span>
+<span id="cb17-35"><a href="#cb17-35" tabindex="-1"></a><span class="co">#&gt; | 0.2 | 0.2 | 0.098 | 0.445 | 0.456 | 0.000 |</span></span>
+<span id="cb17-36"><a href="#cb17-36" tabindex="-1"></a><span class="co">#&gt; | 0.5 | 0.2 | 0.695 | 0.035 | 0.271 | 0.000 |</span></span>
+<span id="cb17-37"><a href="#cb17-37" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-38"><a href="#cb17-38" tabindex="-1"></a><span class="co">#&gt; $\pi_t$ and $\pi_c$ are the true response rates of the treatment and control groups.</span></span>
+<span id="cb17-39"><a href="#cb17-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb17-40"><a href="#cb17-40" tabindex="-1"></a><span class="co">#&gt; Report written by BayesianQDM 1.1.0.</span></span></code></pre></div>
+<p>The HTML report is written and opened in the same way:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>spec <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>  <span class="fu">qdm_oc</span>(scen2) <span class="sc">|&gt;</span></span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>  <span class="fu">show_report</span>(<span class="at">file =</span> <span class="st">&quot;decision_criteria.html&quot;</span>)</span></code></pre></div>
+<p><code>show_code()</code> writes the R code that creates a design, as
+a pipe of the design steps or as a call of the <code>design_*()</code>
+function, and <code>code = TRUE</code> adds that code to the end of the
+report:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">show_code</span>(des)</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="co">#&gt; design &lt;- qdm_endpoint(&quot;binary&quot;) |&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="co">#&gt;   qdm_sample_size(n_t = 12, n_c = 12) |&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="co">#&gt;   qdm_prior(prior_t = prior_beta(a = 0.5, b = 0.5),</span></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="co">#&gt;             prior_c = prior_beta(a = 0.5, b = 0.5)) |&gt;</span></span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a><span class="co">#&gt;   qdm_criterion(criterion_posterior(theta_tv = 0.2, theta_mav = 0.1,</span></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="co">#&gt;                                     gamma_go = 0.5, gamma_nogo = 0.8)) |&gt;</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="co">#&gt;   qdm_build()</span></span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="fu">show_code</span>(des, <span class="at">style =</span> <span class="st">&quot;design&quot;</span>)</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="co">#&gt; design &lt;- design_binary(</span></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a><span class="co">#&gt;   n_t = 12, n_c = 12, prior_t = prior_beta(a = 0.5, b = 0.5),</span></span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="co">#&gt;   prior_c = prior_beta(a = 0.5, b = 0.5),</span></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="co">#&gt;   criterion = criterion_posterior(theta_tv = 0.2, theta_mav = 0.1,</span></span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a><span class="co">#&gt;                                   gamma_go = 0.5, gamma_nogo = 0.8)</span></span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a><span class="co">#&gt; )</span></span></code></pre></div>
+<p>The report gives the parts that depend on the design and the results.
+The parts that depend on the study, such as the name of the endpoint and
+the reasons for the target value and the minimum acceptable value, are
+to be added in the protocol.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

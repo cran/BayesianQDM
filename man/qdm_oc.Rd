@@ -9,7 +9,9 @@ qdm_oc(design, scenarios, nsim = 10000L, seed = NULL)
 \arguments{
 \item{design}{A design created by \code{\link{design_binary}},
 \code{\link{design_continuous}}, \code{\link{design_binary2}},
-\code{\link{design_continuous2}} or \code{\link{design_tte}}.}
+\code{\link{design_continuous2}} or \code{\link{design_tte}}, or a design
+specification started by \code{\link{qdm_endpoint}}, which is built by
+\code{\link{qdm_build}}.}
 
 \item{scenarios}{A data frame with one row per scenario. For a binary
 endpoint the columns \code{pi_t} and \code{pi_c} give the true response
@@ -154,6 +156,9 @@ endpoints in rare disease drug development.
 Other operations:
 \code{\link[=qdm_boundary]{qdm_boundary()}},
 \code{\link[=qdm_calibrate]{qdm_calibrate()}},
-\code{\link[=qdm_decide]{qdm_decide()}}
+\code{\link[=qdm_compare]{qdm_compare()}},
+\code{\link[=qdm_decide]{qdm_decide()}},
+\code{\link[=qdm_find_n]{qdm_find_n()}},
+\code{\link[=qdm_scenarios]{qdm_scenarios()}}
 }
 \concept{operations}

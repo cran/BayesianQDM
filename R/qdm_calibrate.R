@@ -6,11 +6,13 @@
 #'
 #' The threshold \eqn{\gamma_{go}} is the smallest value in \code{grid} for
 #' which the probability that the Go criterion is met under
-#' \code{scenario_go} (typically a scenario with no or a small treatment
-#' effect) is at most \code{target_go}. The threshold \eqn{\gamma_{nogo}} is
-#' the smallest value in \code{grid} for which the probability that the NoGo
-#' criterion is met under \code{scenario_nogo} (typically a scenario with the
-#' expected treatment effect) is at most \code{target_nogo}. Both
+#' \code{scenario_go}, a scenario under which a Go decision would be wrong
+#' (typically with no or a small treatment effect), is at most
+#' \code{target_go}. The threshold \eqn{\gamma_{nogo}} is the smallest value
+#' in \code{grid} for which the probability that the NoGo criterion is met
+#' under \code{scenario_nogo}, a scenario under which a NoGo decision would
+#' be wrong (typically with the expected treatment effect), is at most
+#' \code{target_nogo}. Both
 #' probabilities decrease as the threshold increases, so the chosen thresholds
 #' are the least strict ones that meet the targets.
 #'
@@ -22,7 +24,9 @@
 #'
 #' @param design A design created by \code{\link{design_binary}},
 #'   \code{\link{design_continuous}}, \code{\link{design_binary2}},
-#'   \code{\link{design_continuous2}} or \code{\link{design_tte}}. Its
+#'   \code{\link{design_continuous2}} or \code{\link{design_tte}}, or a design
+#'   specification started by \code{\link{qdm_endpoint}}, which is built by
+#'   \code{\link{qdm_build}}. Its
 #'   thresholds are replaced by the calibrated ones. For two endpoints with a
 #'   marginal rule (\code{rule = "and"} or \code{"or"}), the same threshold is
 #'   used for both endpoints.
@@ -33,7 +37,10 @@
 #' @param target_go,target_nogo Upper bounds for the probabilities that the
 #'   Go criterion is met under \code{scenario_go} and that the NoGo criterion
 #'   is met under \code{scenario_nogo}, strictly between 0 and 1.
-#' @param grid Candidate thresholds, strictly between 0 and 1.
+#' @param grid Candidate thresholds, strictly between 0 and 1. The default
+#'   gives 0.01, 0.02, ..., 0.99 as the numbers written with two decimals
+#'   (\code{seq(0.01, 0.99, by = 0.01)} gives numbers such as
+#'   0.7000000000000001 instead of 0.7).
 #' @param nsim,seed As in \code{\link{qdm_oc}}. The probabilities for all
 #'   values of \code{grid} are computed from the same outcomes (simulated
 #'   studies or enumerated outcomes) and the same Monte Carlo draws.
@@ -75,9 +82,9 @@
 #' cal$design
 #' @export
 qdm_calibrate <- function(design, scenario_go, scenario_nogo, target_go,
-                          target_nogo, grid = seq(0.01, 0.99, by = 0.01),
+                          target_nogo, grid = (1:99) / 100,
                           nsim = 10000L, seed = NULL) {
-  check_design(design)
+  design <- check_design(design)
   scenario_go <- check_scenarios(design, scenario_go, "scenario_go",
                                  one_row = TRUE, feasible = TRUE)
   scenario_nogo <- check_scenarios(design, scenario_nogo, "scenario_nogo",

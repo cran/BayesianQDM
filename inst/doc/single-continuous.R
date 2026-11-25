@@ -66,7 +66,7 @@ des_pred <- design_continuous(
 qdm_decide(des_pred, data_t = data_continuous(12, 22, 25),
            data_c = data_continuous(12, 2, 25))
 
-## ----oc-----------------------------------------------------------------------
+## ----oc, fig.alt = "Probabilities of the decisions against the true difference in means"----
 des_mm <- design_continuous(n_t = 12, n_c = 12, prior_t = prior_vague(),
                             prior_c = prior_vague(), criterion = crit,
                             method = "MM")
@@ -82,18 +82,18 @@ oc_mm <- qdm_oc(des_mm, scen3, nsim = 1000, seed = 1)
 data.frame(mu_t = scen3$mu_t, Go_NI = oc_ni$Go, Go_MM = oc_mm$Go,
            NoGo_NI = oc_ni$NoGo, NoGo_MM = oc_mm$NoGo)
 
-## ----boundary-----------------------------------------------------------------
+## ----boundary, fig.alt = "Regions of the decisions by the observed standard deviation of the treatment group and the observed difference in means"----
 b <- qdm_boundary(des_mm, sd_t = seq(10, 40, by = 5),
                   data_c = data_continuous(12, 2, 25))
 b
 plot(b)
 
-## ----boundary-fixed-----------------------------------------------------------
+## ----boundary-fixed, fig.alt = "Regions of the decisions by the sample size and the observed mean of the treatment group, with a fixed control"----
 b_fix <- qdm_boundary(des_fix, n_t = c(6, 12, 20, 30, 40), sd_t = 25)
 b_fix
 plot(b_fix)
 
-## ----calibrate----------------------------------------------------------------
+## ----calibrate, fig.alt = "Probabilities of meeting the Go and NoGo criteria against the threshold, with the targets and the chosen thresholds; the two curves nearly coincide"----
 cal <- qdm_calibrate(
   des_mm,
   scenario_go = data.frame(mu_t = 0, sd_t = 25, mu_c = 0, sd_c = 25),
